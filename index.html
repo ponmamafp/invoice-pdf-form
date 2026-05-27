@@ -130,8 +130,8 @@
   .pdf-head .recip-person{font-size:13px;color:#333}
   .pdf-head .meta{display:inline-block;text-align:left}
   .pdf-head .meta .k{display:inline-block;width:80px;color:#666}
-  .pdf-issuer{margin:18px 0 26px;padding:14px 16px;background:var(--navy-soft);border-radius:6px;font-size:11px;line-height:1.7}
-  .pdf-issuer .name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
+  .pdf-head .r .issuer-box{margin-top:14px;padding:12px 14px;background:var(--navy-soft);border-radius:6px;font-size:11px;line-height:1.7;text-align:left}
+  .pdf-head .r .issuer-box .name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
   .pdf-subject{margin:0 0 22px;font-size:14px;font-weight:700;border-left:4px solid var(--navy);padding:4px 0 4px 12px}
   .pdf-amount-hero{background:var(--navy);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:26px;display:flex;justify-content:space-between;align-items:baseline}
   .pdf-amount-hero .lbl{font-size:13px;letter-spacing:.1em}
@@ -141,6 +141,9 @@
   .pdf-table td{padding:10px 12px;border:1px solid var(--line);background:#fff}
   .pdf-table td.r{text-align:right;font-variant-numeric:tabular-nums}
   .pdf-table td.c{text-align:center}
+  .pdf-bottom{display:flex;gap:18px;margin-top:18px;align-items:flex-start}
+  .pdf-bottom .pdf-bank{flex:1;margin-top:0}
+  .pdf-bottom .pdf-summary{flex:1.15;margin-left:0;width:auto}
   .pdf-summary{margin-left:auto;width:340px;border:1px solid var(--line);border-radius:4px;overflow:hidden;font-size:12px}
   .pdf-summary .row{display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #E5E7EB}
   .pdf-summary .row:last-child{border-bottom:none}
@@ -150,10 +153,10 @@
   .pdf-summary .row.grand{background:var(--navy-soft);font-weight:700}
   .pdf-summary .row.grand .k,.pdf-summary .row.grand .v{color:var(--navy);font-size:14px}
   .pdf-bank{margin-top:28px;border:1px solid var(--line);border-radius:4px;padding:14px 16px;font-size:12px;background:#fff}
-  .pdf-bank h4{margin:0 0 8px;font-size:12px;color:var(--navy);font-weight:700;border-bottom:1px solid #E5E7EB;padding-bottom:6px}
+  .pdf-bank h4{margin:10px 0 8px;font-size:12px;color:var(--navy);font-weight:700;border-bottom:1px solid #E5E7EB;padding-bottom:6px}
   .pdf-bank .row{display:flex;padding:3px 0}
-  .pdf-bank .row .k{width:90px;color:#666}
-  .pdf-bank .row .v{flex:1}
+  .pdf-bank .row .k{width:78px;color:#666}
+  .pdf-bank .row .v{flex:1;font-variant-numeric:tabular-nums}
   .pdf-bikou{margin-top:18px;border:1px solid var(--line);border-radius:4px;padding:12px 16px;font-size:11px;background:#fff;line-height:1.7}
   .pdf-bikou h4{margin:0 0 6px;font-size:11px;color:var(--navy);font-weight:700;border-bottom:1px solid #E5E7EB;padding-bottom:4px}
   .pdf-bikou #pdfNotes{white-space:pre-wrap;color:#333}
@@ -302,7 +305,12 @@
         <div class="meta">
           <div><span class="k">発行日</span><span id="pdfDate">2026/05/27</span></div>
           <div><span class="k">請求書No.</span><span id="pdfInvNo">INV-0001</span></div>
-          <div><span class="k">支払期限</span><span id="pdfDueDate">2026/06/26</span></div>
+          <div id="pdfRegNoRow"><span class="k">登録番号</span><span id="pdfRegNo">T1234567890123</span></div>
+        </div>
+        <div class="issuer-box">
+          <div class="name" id="pdfIssuerName">氏名／会社名</div>
+          <div id="pdfIssuerAddress"></div>
+          <div id="pdfIssuerContact">連絡先</div>
         </div>
       </div>
     </div>
@@ -324,28 +332,24 @@
       <tbody id="pdfRows"></tbody>
     </table>
 
-    <div class="pdf-summary">
-      <div class="row"><span class="k">税抜合計金額</span><span class="v" id="pdfSubtotal">¥0</span></div>
-      <div class="row"><span class="k">消費税額（10%）</span><span class="v" id="pdfTax">¥0</span></div>
-      <div class="row"><span class="k">合計金額（税込）</span><span class="v" id="pdfGross">¥0</span></div>
-      <div class="row minus"><span class="k" id="pdfWithholdLabel">源泉徴収税額（10.21%）</span><span class="v" id="pdfWithhold">▲¥0</span></div>
-      <div class="row grand"><span class="k">ご請求金額（振込額）</span><span class="v" id="pdfPay">¥0</span></div>
-    </div>
+    <div class="pdf-bottom">
+      <div class="pdf-bank">
+        <div class="row"><span class="k">入金期日</span><span class="v" id="pdfDueDate2">2026/06/30</span></div>
+        <h4>振込先</h4>
+        <div class="row"><span class="k">銀行名</span><span class="v" id="pdfBankName">○○銀行</span></div>
+        <div class="row"><span class="k">支店名</span><span class="v" id="pdfBankBranch">○○支店</span></div>
+        <div class="row"><span class="k">口座種別</span><span class="v" id="pdfBankType">普通</span></div>
+        <div class="row"><span class="k">口座番号</span><span class="v" id="pdfBankNo">1234567</span></div>
+        <div class="row"><span class="k">口座名義</span><span class="v" id="pdfBankAccountName">ヤマダ タロウ</span></div>
+      </div>
 
-    <div class="pdf-issuer">
-      <div class="name" id="pdfIssuerName">氏名／会社名</div>
-      <div id="pdfIssuerReg">登録番号: T1234567890123</div>
-      <div id="pdfIssuerContact">連絡先</div>
-      <div id="pdfIssuerAddress"></div>
-    </div>
-
-    <div class="pdf-bank">
-      <h4>振込先</h4>
-      <div class="row"><span class="k">銀行名</span><span class="v" id="pdfBankName">○○銀行</span></div>
-      <div class="row"><span class="k">支店名</span><span class="v" id="pdfBankBranch">○○支店</span></div>
-      <div class="row"><span class="k">口座種別</span><span class="v" id="pdfBankType">普通</span></div>
-      <div class="row"><span class="k">口座番号</span><span class="v" id="pdfBankNo">1234567</span></div>
-      <div class="row"><span class="k">口座名義</span><span class="v" id="pdfBankAccountName">ヤマダ タロウ</span></div>
+      <div class="pdf-summary">
+        <div class="row"><span class="k">税抜合計金額</span><span class="v" id="pdfSubtotal">¥0</span></div>
+        <div class="row"><span class="k">消費税額（10%）</span><span class="v" id="pdfTax">¥0</span></div>
+        <div class="row"><span class="k">合計金額（税込）</span><span class="v" id="pdfGross">¥0</span></div>
+        <div class="row minus"><span class="k" id="pdfWithholdLabel">源泉徴収税額（10.21%）</span><span class="v" id="pdfWithhold">▲¥0</span></div>
+        <div class="row grand"><span class="k">ご請求金額（振込額）</span><span class="v" id="pdfPay">¥0</span></div>
+      </div>
     </div>
 
     <div class="pdf-bikou" id="pdfBikou">
@@ -640,12 +644,16 @@ async function generatePdf(){
   const r = calc(itemsTotal, f.travel);
   const invNo = currentInvNoString();
 
-  // ステージへ反映
-  $("pdfRecipCompany").textContent = (settings.recipient.company || "") + " 御中";
-  $("pdfRecipPerson").textContent  = (settings.recipient.person  || "") + " 様";
+  // ステージへ反映（御中・様は名前があるときだけ付ける）
+  const recipCompany = (settings.recipient.company || "").trim();
+  const recipPerson  = (settings.recipient.person  || "").trim();
+  $("pdfRecipCompany").textContent = recipCompany ? recipCompany + " 御中" : "";
+  $("pdfRecipCompany").style.display = recipCompany ? "" : "none";
+  $("pdfRecipPerson").textContent  = recipPerson ? recipPerson + " 様" : "";
+  $("pdfRecipPerson").style.display = recipPerson ? "" : "none";
   $("pdfDate").textContent         = fmtDate(f.date);
   $("pdfInvNo").textContent        = invNo;
-  $("pdfDueDate").textContent      = computeDueDate(f.date, settings.paymentTerms);
+  $("pdfDueDate2").textContent     = computeDueDate(f.date, settings.paymentTerms);
 
   $("pdfHeroAmount").textContent = yen(r.payable);
 
@@ -682,9 +690,10 @@ async function generatePdf(){
   $("pdfPay").textContent            = yen(r.payable);
 
   $("pdfIssuerName").textContent     = settings.issuer.name || "";
-  $("pdfIssuerReg").textContent      = settings.issuer.registrationNo ? "登録番号: " + settings.issuer.registrationNo : "";
   $("pdfIssuerContact").textContent  = settings.issuer.contact || "";
   $("pdfIssuerAddress").textContent  = settings.issuer.address || "";
+  $("pdfRegNo").textContent          = settings.issuer.registrationNo || "";
+  $("pdfRegNoRow").style.display     = settings.issuer.registrationNo ? "" : "none";
 
   $("pdfBankName").textContent        = settings.bank.bankName || "";
   $("pdfBankBranch").textContent      = settings.bank.branch || "";
