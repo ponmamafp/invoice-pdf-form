@@ -89,6 +89,7 @@
   .btn-add:active{background:var(--navy-soft)}
   .tax-note{background:#FFF9E6;border:1px solid #F0DC9C;border-radius:10px;padding:10px 14px;margin:4px 0 12px;font-size:12px;color:#665600;line-height:1.6}
   .tax-note strong{color:#7A4F00;font-weight:700}
+  .month-warning{background:#FDECEC;border:1px solid #F0B0B0;border-radius:10px;padding:10px 14px;margin:4px 0 12px;font-size:13px;color:#9B1C1C;line-height:1.6;font-weight:500}
   .preview{background:var(--navy-soft);border-radius:12px;padding:14px 16px;margin:6px 0 18px;border:1px solid #DDE5F1}
   .preview .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted);padding:3px 0}
   .preview .row.total{font-size:15px;color:var(--navy);font-weight:700;border-top:1px solid #C7D2E5;margin-top:6px;padding-top:8px}
@@ -134,15 +135,15 @@
   .pdf-page .title{font-size:32px;font-weight:700;color:var(--navy);text-align:center;letter-spacing:.6em;padding-left:.6em;border-bottom:3px double var(--navy);padding-bottom:8px;margin-bottom:30px}
   .pdf-head{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px;align-items:flex-start}
   .pdf-head .l{flex:1;padding:0;line-height:1.7;color:#111}
-  .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-start;padding-left:100px}
+  .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-end;padding-left:0}
   .pdf-head .recip-name{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
   .pdf-head .recip-postal{font-size:12px;color:#333;margin-top:2px}
   .pdf-head .recip-address{font-size:12px;color:#333}
   .pdf-head .recip-person{font-size:14px;color:#222;margin-top:6px}
   .pdf-head .recip-person.solo{font-size:17px;font-weight:700;color:#111}
-  .pdf-head .meta{text-align:left}
+  .pdf-head .meta{text-align:left;width:220px}
   .pdf-head .meta .k{display:inline-block;width:80px;color:#666;text-align:left}
-  .pdf-head .r .issuer-box{margin-top:14px;padding:0;background:transparent;font-size:11px;line-height:1.7;text-align:left;color:#333}
+  .pdf-head .r .issuer-box{margin-top:14px;padding:0;background:transparent;font-size:11px;line-height:1.7;text-align:left;color:#333;width:220px}
   .pdf-head .r .issuer-box .name{font-size:13px;font-weight:400;color:#111;margin-bottom:2px}
   .pdf-subject{margin:0 0 22px;font-size:14px;font-weight:700;border-left:4px solid var(--navy);padding:4px 0 4px 12px}
   .pdf-amount-hero{background:var(--navy);color:#fff;padding:12px 22px;border-radius:6px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:baseline}
@@ -205,6 +206,8 @@
       </div>
     </div>
 
+    <div class="month-warning" id="monthWarning" style="display:none"></div>
+
     <div class="tax-note">
       ※ 金額は<strong>内税表記</strong>です。源泉徴収（所得税）は税抜金額から自動計算されます。
     </div>
@@ -217,7 +220,6 @@
       <div class="row total"><span>ご請求金額（振込額）</span><span class="v" id="pPay">¥0</span></div>
     </div>
   </form>
-  <div class="invoice-meta">請求書No. <span id="nextInvNo">INV-0001</span> として発行されます</div>
 </main>
 
 <div class="footer-bar">
@@ -234,23 +236,6 @@
       <button type="button" id="btnSettingsClose">閉じる</button>
     </div>
     <div class="modal-body">
-
-      <div class="sec">
-        <h3>請求書No.</h3>
-        <div class="inv-no-row">
-          <span class="label">次回採番:</span>
-          <span class="value" id="sCurrentNo">INV-0001</span>
-          <button type="button" id="btnResetNo">連番リセット</button>
-        </div>
-        <div class="field">
-          <label for="sPrefix">プレフィックス</label>
-          <input type="text" id="sPrefix" placeholder="INV-">
-        </div>
-        <div class="field">
-          <label for="sNextSeq">次回シーケンス番号</label>
-          <input type="number" id="sNextSeq" inputmode="numeric" min="1" step="1" placeholder="1">
-        </div>
-      </div>
 
       <div class="sec">
         <h3>発行元情報（あなたの情報）</h3>
@@ -324,7 +309,6 @@
       <div class="r">
         <div class="meta">
           <div><span class="k">発行日</span><span id="pdfDate">2026/05/27</span></div>
-          <div><span class="k">請求書No.</span><span id="pdfInvNo">INV-0001</span></div>
           <div id="pdfRegNoRow"><span class="k">登録番号</span><span id="pdfRegNo">T1234567890123</span></div>
         </div>
         <div class="issuer-box">
@@ -337,7 +321,7 @@
     </div>
 
     <div class="pdf-amount-hero">
-      <span class="lbl">ご請求金額（振込額）</span>
+      <span class="lbl" id="pdfHeroLabel">ご請求額</span>
       <span class="val" id="pdfHeroAmount">¥0</span>
     </div>
 
@@ -356,7 +340,8 @@
 
     <div class="pdf-bottom">
       <div class="pdf-bank">
-        <div class="row"><span class="k">入金期日</span><span class="v" id="pdfDueDate2">2026/06/30</span></div>
+        <div class="row"><span class="k">支払条件</span><span class="v" id="pdfPayTerms">翌月末払い</span></div>
+        <div class="row"><span class="k">支払期日</span><span class="v" id="pdfPayDue">2026年6月30日</span></div>
         <h4>振込先</h4>
         <div class="row"><span class="k">銀行名</span><span class="v" id="pdfBankName">○○銀行</span></div>
         <div class="row"><span class="k">支店名</span><span class="v" id="pdfBankBranch">○○支店</span></div>
@@ -655,7 +640,15 @@ function refreshPreview(){
   $("pGross").textContent    = yen(r.grossTotal);
   $("pWith").textContent     = yenMinus(r.withhold);
   $("pPay").textContent      = yen(r.payable);
-  $("nextInvNo").textContent = currentInvNoString();
+  // 複数月警告
+  const monthKeys = getItemMonthKeys(f.items);
+  const warn = $("monthWarning");
+  if(monthKeys.length > 1){
+    warn.textContent = `⚠️ 撮影日が${monthKeys.length}つの月にまたがっています。請求書は月ごとに発行してください。このままではPDF出力できません。`;
+    warn.style.display = "";
+  } else {
+    warn.style.display = "none";
+  }
 }
 
 /* =========================================================================
@@ -694,6 +687,44 @@ function computeDueDate(iso, terms){
     return fmtSlash(d);
   }
 }
+// 明細の撮影日から年月キーの一覧（重複なし・昇順）を返す
+function getItemMonthKeys(items){
+  const dates = (items || [])
+    .filter(i => i && i.shootDate)
+    .map(i => new Date(i.shootDate + "T00:00:00"))
+    .filter(d => !isNaN(d.getTime()));
+  return [...new Set(dates.map(d => d.getFullYear() + "-" + d.getMonth()))]
+    .sort((a, b) => {
+      const [ay, am] = a.split("-").map(Number);
+      const [by, bm] = b.split("-").map(Number);
+      return (ay - by) || (am - bm);
+    });
+}
+
+// 明細の撮影日から「2026年5月分」のような請求対象月文字列を作る
+function calcInvoicePeriod(items){
+  const dates = (items || [])
+    .filter(i => i && i.shootDate)
+    .map(i => new Date(i.shootDate + "T00:00:00"))
+    .filter(d => !isNaN(d.getTime()));
+  if(dates.length === 0) return "";
+  const keys = [...new Set(dates.map(d => d.getFullYear() + "-" + d.getMonth()))]
+    .sort((a, b) => {
+      const [ay, am] = a.split("-").map(Number);
+      const [by, bm] = b.split("-").map(Number);
+      return (ay - by) || (am - bm);
+    });
+  const first = keys[0].split("-").map(Number);
+  const last  = keys[keys.length - 1].split("-").map(Number);
+  if(keys.length === 1){
+    return `${first[0]}年${first[1] + 1}月分`;
+  }
+  if(first[0] === last[0]){
+    return `${first[0]}年${first[1] + 1}月〜${last[1] + 1}月分`;
+  }
+  return `${first[0]}年${first[1] + 1}月〜${last[0]}年${last[1] + 1}月分`;
+}
+
 function paymentTermsLabel(terms){
   const t = (terms && terms.type) || "daysAfter";
   if(t === "endOfMonth") return "当月末払い";
@@ -712,6 +743,18 @@ async function generatePdf(){
   const validItems = f.items.filter(i => i.content && i.amount > 0);
   if(validItems.length === 0){
     alert("明細を1件以上入力してください（内容と金額の両方が必要です）");
+    return;
+  }
+  // 撮影日チェック：すべての明細に撮影日が必要（支払期日の算出に使う）
+  const itemsWithoutDate = validItems.filter(i => !i.shootDate);
+  if(itemsWithoutDate.length > 0){
+    alert("撮影日が入力されていない明細があります。\n全ての明細に撮影日を入力してください。");
+    return;
+  }
+  // 撮影日が複数の月にまたがっていないかチェック
+  const monthKeys = getItemMonthKeys(validItems);
+  if(monthKeys.length > 1){
+    alert("明細の撮影日が複数の月にまたがっています。\n請求書は月ごとに分けて発行してください。");
     return;
   }
   const itemsTotal = sumItems(validItems);
@@ -735,8 +778,27 @@ async function generatePdf(){
   // 会社名がなく担当者だけのときは大きめに表示
   $("pdfRecipPerson").classList.toggle("solo", !recipCompany && !!recipPerson);
   $("pdfDate").textContent         = fmtDate(f.date);
-  $("pdfInvNo").textContent        = invNo;
-  $("pdfDueDate2").textContent     = computeDueDate(f.date, settings.paymentTerms);
+  // 請求対象月（明細の撮影日から自動算出）→ ヒーローラベルに反映
+  const period = calcInvoicePeriod(validItems);
+  $("pdfHeroLabel").textContent = period ? period + "　ご請求額" : "ご請求額";
+  $("pdfPayTerms").textContent     = paymentTermsLabel(settings.paymentTerms);
+  // 支払期日は撮影日の月を基準に計算（撮影日がなければ発行日にフォールバック）
+  const shootDates = validItems
+    .filter(i => i.shootDate)
+    .map(i => new Date(i.shootDate + "T00:00:00"))
+    .filter(d => !isNaN(d.getTime()));
+  let baseIso = f.date;
+  if(shootDates.length > 0){
+    const latest = new Date(Math.max(...shootDates));
+    baseIso = latest.getFullYear() + "-"
+      + String(latest.getMonth() + 1).padStart(2, "0") + "-"
+      + String(latest.getDate()).padStart(2, "0");
+  }
+  const dueSlash = computeDueDate(baseIso, settings.paymentTerms);
+  const dueParts = dueSlash.split("/").map(Number);
+  $("pdfPayDue").textContent       = dueParts.length === 3
+    ? `${dueParts[0]}年${dueParts[1]}月${dueParts[2]}日`
+    : dueSlash;
 
   $("pdfHeroAmount").textContent = yen(r.payable);
 
@@ -846,12 +908,12 @@ async function generatePdf(){
 
     pdf.save(fileName);
 
-    // 採番をインクリメント＆次回のために明細を保存（場所/お客様名/内容のみ・撮影日と金額は毎回入力）
+    // 採番をインクリメント＆次回のために明細を保存（内容のみ・撮影日/場所/お客様名/金額は毎回リセット）
     bumpInvNo();
     saveLastItems(validItems.map(it => ({
       shootDate: "",
-      location: it.location || "",
-      customerName: it.customerName || "",
+      location: "",
+      customerName: "",
       content: it.content,
       amount: ""
     })));
@@ -875,10 +937,6 @@ function escapeHtml(s){
    設定モーダル
    ========================================================================= */
 function openSettings(){
-  $("sCurrentNo").textContent = currentInvNoString();
-  $("sPrefix").value          = settings.invoiceNo.prefix ?? "";
-  $("sNextSeq").value         = settings.invoiceNo.nextSeq ?? 1;
-
   $("sIssuerName").value      = settings.issuer.name || "";
   $("sIssuerReg").value       = settings.issuer.registrationNo || "";
   $("sIssuerContact").value   = settings.issuer.contact || "";
@@ -917,9 +975,6 @@ function closeSettings(){
   document.body.style.overflow = "";
 }
 function saveFromModal(){
-  settings.invoiceNo.prefix  = $("sPrefix").value || "";
-  settings.invoiceNo.nextSeq = Math.max(1, parseInt($("sNextSeq").value || "1", 10) || 1);
-
   settings.issuer.name           = $("sIssuerName").value.trim();
   settings.issuer.registrationNo = $("sIssuerReg").value.trim();
   settings.issuer.contact        = $("sIssuerContact").value.trim();
@@ -984,18 +1039,6 @@ function init(){
   $("btnSettingsClose").addEventListener("click", closeSettings);
   $("btnSettingsCancel").addEventListener("click", closeSettings);
   $("btnSettingsSave").addEventListener("click", saveFromModal);
-  $("btnResetNo").addEventListener("click", () => {
-    if(confirm("請求書No.の連番を1にリセットしますか？")){
-      $("sNextSeq").value = 1;
-      $("sCurrentNo").textContent = ($("sPrefix").value || "") + String(1).padStart(settings.invoiceNo.padding||4, "0");
-    }
-  });
-  $("sPrefix").addEventListener("input", () => {
-    $("sCurrentNo").textContent = ($("sPrefix").value || "") + String(parseInt($("sNextSeq").value||"1",10)||1).padStart(settings.invoiceNo.padding||4, "0");
-  });
-  $("sNextSeq").addEventListener("input", () => {
-    $("sCurrentNo").textContent = ($("sPrefix").value || "") + String(parseInt($("sNextSeq").value||"1",10)||1).padStart(settings.invoiceNo.padding||4, "0");
-  });
   $("sPayType").addEventListener("change", updatePayDaysVisibility);
 
   $("btnDownload").addEventListener("click", generatePdf);
