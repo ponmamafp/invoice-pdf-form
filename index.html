@@ -69,6 +69,8 @@
   .field input:focus,.field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,56,100,.12)}
   .field .with-suffix{position:relative}
   .field .with-suffix input{padding-right:44px}
+  .field .with-suffix input.money,
+  .item-row .with-suffix input.money{text-align:right;font-variant-numeric:tabular-nums}
   .field .with-suffix .suffix{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
   .required{color:var(--danger);font-size:12px;margin-left:4px}
   .item-row{background:#fff;border:1px solid #D0D5DD;border-radius:10px;padding:12px;margin-bottom:10px}
@@ -183,7 +185,7 @@
     <div class="field">
       <label for="fTravel">交通費<span class="hint">任意・源泉徴収の対象に含めます</span></label>
       <div class="with-suffix">
-        <input type="number" id="fTravel" inputmode="numeric" min="0" step="1" placeholder="">
+        <input type="text" id="fTravel" class="money" inputmode="numeric" autocomplete="off" placeholder="">
         <span class="suffix">円</span>
       </div>
     </div>
@@ -259,7 +261,7 @@
         <div class="field">
           <label for="sPayType">支払期限の決め方</label>
           <select id="sPayType">
-            <option value="endOfNextMonth">翌月末払い（推奨）</option>
+            <option value="endOfNextMonth">翌月末払い</option>
             <option value="endOfMonth">当月末払い</option>
             <option value="endOfMonthAfterNext">翌々月末払い</option>
             <option value="daysAfter">発行日から〇日後</option>
@@ -467,6 +469,21 @@ function yenMinus(n){
   return "▲¥" + (n|0).toLocaleString("ja-JP");
 }
 
+// 金額入力欄をカンマ区切りで再描画する
+function formatMoneyInput(input){
+  const raw = (input.value || "").replace(/[^\d]/g, "");
+  if(raw === ""){
+    input.value = "";
+    return;
+  }
+  // 先頭ゼロを消した上でカンマ区切り表示
+  input.value = parseInt(raw, 10).toLocaleString("ja-JP");
+}
+// 金額入力欄の文字列を数値化（カンマ・空白を除去）
+function parseMoney(v){
+  return parseInt(String(v || "0").replace(/[^\d]/g, ""), 10) || 0;
+}
+
 /* =========================================================================
    請求書No.
    ========================================================================= */
@@ -489,7 +506,7 @@ const $ = (id)=>document.getElementById(id);
 function getItems(){
   return [...document.querySelectorAll("#itemsList .item-row")].map(r => ({
     content: r.querySelector(".item-content").value.trim(),
-    amount: parseInt(r.querySelector(".item-amount").value || "0", 10) || 0
+    amount: parseMoney(r.querySelector(".item-amount").value)
   }));
 }
 
@@ -497,7 +514,7 @@ function readForm(){
   return {
     date: $("fDate").value,
     items: getItems(),
-    travel: parseInt($("fTravel").value || "0", 10) || 0
+    travel: parseMoney($("fTravel").value)
   };
 }
 
@@ -516,14 +533,18 @@ function addItem(initial){
     </div>
     <textarea class="item-content" rows="2"></textarea>
     <div class="with-suffix">
-      <input class="item-amount" type="number" inputmode="numeric" min="0" step="1" placeholder="">
+      <input class="item-amount money" type="text" inputmode="numeric" autocomplete="off" placeholder="">
       <span class="suffix">円</span>
     </div>
   `;
   row.querySelector(".item-content").value = initial.content;
   row.querySelector(".item-amount").value  = initial.amount;
   row.querySelector(".item-content").addEventListener("input", refreshPreview);
-  row.querySelector(".item-amount").addEventListener("input", refreshPreview);
+  const amtEl = row.querySelector(".item-amount");
+  amtEl.addEventListener("input", () => {
+    formatMoneyInput(amtEl);
+    refreshPreview();
+  });
   row.querySelector(".item-del").addEventListener("click", () => {
     const rows = document.querySelectorAll("#itemsList .item-row");
     if(rows.length <= 1){
@@ -816,7 +837,10 @@ function init(){
   addItem();
   $("btnAddItem").addEventListener("click", () => { addItem(); });
 
-  $("fTravel").addEventListener("input", refreshPreview);
+  $("fTravel").addEventListener("input", () => {
+    formatMoneyInput($("fTravel"));
+    refreshPreview();
+  });
 
   $("btnSettings").addEventListener("click", openSettings);
   $("btnSettingsClose").addEventListener("click", closeSettings);
