@@ -78,11 +78,17 @@
   .item-row-no{font-size:12px;color:var(--navy);font-weight:700;letter-spacing:.04em}
   .item-del{background:transparent;border:none;color:var(--muted);font-size:22px;width:34px;height:34px;border-radius:8px;cursor:pointer;line-height:1;font-family:inherit;padding:0}
   .item-del:active{background:#F1F3F8;color:var(--danger)}
-  .item-row textarea{display:block;width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid #D0D5DD;border-radius:8px;padding:10px 12px;margin-bottom:8px;min-height:64px;line-height:1.5;resize:vertical;appearance:none;-webkit-appearance:none}
+  .item-row textarea{display:block;width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid #D0D5DD;border-radius:8px;padding:10px 12px;min-height:64px;line-height:1.5;resize:vertical;appearance:none;-webkit-appearance:none}
   .item-row .with-suffix input{width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid #D0D5DD;border-radius:8px;padding:10px 40px 10px 12px;min-height:44px;appearance:none;-webkit-appearance:none}
+  .item-row input[type="date"],.item-row input[type="text"]:not(.money){width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid #D0D5DD;border-radius:8px;padding:10px 12px;min-height:44px;appearance:none;-webkit-appearance:none}
   .item-row textarea:focus,.item-row input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,56,100,.12)}
+  .item-field{margin-bottom:10px}
+  .item-field:last-child{margin-bottom:0}
+  .item-field-label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;letter-spacing:.02em}
   .btn-add{display:block;width:100%;background:#fff;color:var(--navy);border:1px dashed var(--navy);font-size:14px;font-weight:600;font-family:inherit;padding:12px;border-radius:10px;min-height:44px;cursor:pointer;letter-spacing:.04em;margin-top:4px}
   .btn-add:active{background:var(--navy-soft)}
+  .tax-note{background:#FFF9E6;border:1px solid #F0DC9C;border-radius:10px;padding:10px 14px;margin:4px 0 12px;font-size:12px;color:#665600;line-height:1.6}
+  .tax-note strong{color:#7A4F00;font-weight:700}
   .preview{background:var(--navy-soft);border-radius:12px;padding:14px 16px;margin:6px 0 18px;border:1px solid #DDE5F1}
   .preview .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted);padding:3px 0}
   .preview .row.total{font-size:15px;color:var(--navy);font-weight:700;border-top:1px solid #C7D2E5;margin-top:6px;padding-top:8px}
@@ -125,7 +131,7 @@
   .pdf-page .title{font-size:32px;font-weight:700;color:var(--navy);text-align:center;letter-spacing:.6em;padding-left:.6em;border-bottom:3px double var(--navy);padding-bottom:8px;margin-bottom:30px}
   .pdf-head{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px;align-items:flex-start}
   .pdf-head .l{flex:1;padding:0;line-height:1.7;color:#111}
-  .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-start;padding-left:60px}
+  .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-start;padding-left:100px}
   .pdf-head .recip-name{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
   .pdf-head .recip-person{font-size:14px;color:#222}
   .pdf-head .recip-person.solo{font-size:17px;font-weight:700;color:#111}
@@ -181,7 +187,7 @@
     </div>
 
     <div class="field">
-      <label>明細<span class="required">*</span><span class="hint">例：2026年5月分 撮影費</span></label>
+      <label>明細<span class="required">*</span><span class="hint">撮影ごとに1セット</span></label>
       <div id="itemsList"></div>
       <button type="button" class="btn-add" id="btnAddItem">＋ 明細を追加</button>
     </div>
@@ -192,6 +198,10 @@
         <input type="text" id="fTravel" class="money" inputmode="numeric" autocomplete="off" placeholder="">
         <span class="suffix">円</span>
       </div>
+    </div>
+
+    <div class="tax-note">
+      ※ 金額は<strong>内税表記</strong>です。源泉徴収（所得税）は税抜金額から自動計算されます。
     </div>
 
     <div class="preview" id="preview" aria-live="polite">
@@ -258,7 +268,6 @@
       <div class="sec">
         <h3>宛先（請求先）</h3>
         <div class="field"><label for="sRecipCompany">会社名</label><input type="text" id="sRecipCompany" placeholder="株式会社○○○○"></div>
-        <div class="field"><label for="sRecipPerson">担当者名</label><input type="text" id="sRecipPerson" placeholder="ご担当者"></div>
       </div>
 
       <div class="sec">
@@ -282,7 +291,7 @@
         <h3>備考（PDFに表示される文言）</h3>
         <div class="field">
           <label for="sNotes">備考</label>
-          <textarea id="sNotes" rows="3" placeholder="恐れ入りますが、振込手数料はご負担くださいますようお願い申し上げます。"></textarea>
+          <textarea id="sNotes" rows="4" placeholder="恐れ入りますが、振込手数料はご負担くださいますようお願い申し上げます。&#10;※金額は内税表記です。源泉徴収税額は税抜金額に対して計算しています。"></textarea>
         </div>
       </div>
 
@@ -326,10 +335,11 @@
     <table class="pdf-table">
       <thead>
         <tr>
-          <th style="width:55%">内容</th>
-          <th style="width:10%">数量</th>
-          <th style="width:17.5%">単価（税込）</th>
-          <th style="width:17.5%">金額（税込）</th>
+          <th style="width:13%">撮影日</th>
+          <th style="width:18%">場所</th>
+          <th style="width:17%">お客様</th>
+          <th style="width:34%">内容</th>
+          <th style="width:18%">金額（税込）</th>
         </tr>
       </thead>
       <tbody id="pdfRows"></tbody>
@@ -398,7 +408,7 @@ const CONFIG = {
     type: "endOfNextMonth",
     days: 30  // daysAfter のときだけ使う
   },
-  notes: "恐れ入りますが、振込手数料はご負担くださいますようお願い申し上げます。",
+  notes: "恐れ入りますが、振込手数料はご負担くださいますようお願い申し上げます。\n※金額は内税表記です。源泉徴収税額は税抜金額に対して計算しています。",
   invoiceNo: {
     prefix: "INV-",
     nextSeq: 1,
@@ -521,6 +531,9 @@ const $ = (id)=>document.getElementById(id);
 
 function getItems(){
   return [...document.querySelectorAll("#itemsList .item-row")].map(r => ({
+    shootDate: r.querySelector(".item-shoot-date").value,
+    location: r.querySelector(".item-location").value.trim(),
+    customerName: r.querySelector(".item-customer").value.trim(),
     content: r.querySelector(".item-content").value.trim(),
     amount: parseMoney(r.querySelector(".item-amount").value)
   }));
@@ -539,7 +552,7 @@ function sumItems(items){
 }
 
 function addItem(initial){
-  initial = initial || { content:"", amount:"" };
+  initial = initial || { shootDate:"", location:"", customerName:"", content:"", amount:"" };
   const row = document.createElement("div");
   row.className = "item-row";
   row.innerHTML = `
@@ -547,16 +560,40 @@ function addItem(initial){
       <span class="item-row-no">明細</span>
       <button type="button" class="item-del" aria-label="この明細を削除">×</button>
     </div>
-    <textarea class="item-content" rows="2"></textarea>
-    <div class="with-suffix">
-      <input class="item-amount money" type="text" inputmode="numeric" autocomplete="off" placeholder="">
-      <span class="suffix">円</span>
+    <div class="item-field">
+      <span class="item-field-label">撮影日</span>
+      <input type="date" class="item-shoot-date">
+    </div>
+    <div class="item-field">
+      <span class="item-field-label">場所</span>
+      <input type="text" class="item-location" autocomplete="off">
+    </div>
+    <div class="item-field">
+      <span class="item-field-label">お客様名（任意）</span>
+      <input type="text" class="item-customer" autocomplete="off">
+    </div>
+    <div class="item-field">
+      <span class="item-field-label">内容</span>
+      <textarea class="item-content" rows="2"></textarea>
+    </div>
+    <div class="item-field">
+      <span class="item-field-label">金額</span>
+      <div class="with-suffix">
+        <input class="item-amount money" type="text" inputmode="numeric" autocomplete="off">
+        <span class="suffix">円</span>
+      </div>
     </div>
   `;
+  row.querySelector(".item-shoot-date").value = initial.shootDate || "";
+  row.querySelector(".item-location").value = initial.location || "";
+  row.querySelector(".item-customer").value = initial.customerName || "";
   row.querySelector(".item-content").value = initial.content || "";
   const amtInit = row.querySelector(".item-amount");
   amtInit.value = initial.amount != null && initial.amount !== "" ? String(initial.amount) : "";
   formatMoneyInput(amtInit);
+  row.querySelector(".item-shoot-date").addEventListener("input", refreshPreview);
+  row.querySelector(".item-location").addEventListener("input", refreshPreview);
+  row.querySelector(".item-customer").addEventListener("input", refreshPreview);
   row.querySelector(".item-content").addEventListener("input", refreshPreview);
   const amtEl = row.querySelector(".item-amount");
   amtEl.addEventListener("input", () => {
@@ -566,6 +603,9 @@ function addItem(initial){
   row.querySelector(".item-del").addEventListener("click", () => {
     const rows = document.querySelectorAll("#itemsList .item-row");
     if(rows.length <= 1){
+      row.querySelector(".item-shoot-date").value = "";
+      row.querySelector(".item-location").value = "";
+      row.querySelector(".item-customer").value = "";
       row.querySelector(".item-content").value = "";
       row.querySelector(".item-amount").value = "";
     } else {
@@ -674,27 +714,30 @@ async function generatePdf(){
 
   $("pdfHeroAmount").textContent = yen(r.payable);
 
-  // 明細行
+  // 明細行（5列：撮影日 / 場所 / お客様 / 内容 / 金額）
   const rows = validItems.map(it => ({
-    name: it.content,
-    qty: 1,
-    unit: it.amount,
+    shootDate: it.shootDate ? fmtDate(it.shootDate) : "",
+    location: it.location || "",
+    customerName: it.customerName || "",
+    content: it.content,
     amount: it.amount
   }));
   if(f.travel > 0){
     rows.push({
-      name: "交通費",
-      qty: 1,
-      unit: f.travel,
+      shootDate: "",
+      location: "",
+      customerName: "",
+      content: "交通費",
       amount: f.travel
     });
   }
   const tbody = $("pdfRows");
   tbody.innerHTML = rows.map(row => `
     <tr>
-      <td>${escapeHtml(row.name).replace(/\n/g,"<br>")}</td>
-      <td class="c">${row.qty}</td>
-      <td class="r">${yen(row.unit)}</td>
+      <td class="c">${escapeHtml(row.shootDate)}</td>
+      <td>${escapeHtml(row.location)}</td>
+      <td>${escapeHtml(row.customerName)}</td>
+      <td>${escapeHtml(row.content).replace(/\n/g,"<br>")}</td>
       <td class="r">${yen(row.amount)}</td>
     </tr>
   `).join("");
@@ -777,9 +820,15 @@ async function generatePdf(){
 
     pdf.save(fileName);
 
-    // 採番をインクリメント＆次回のために明細を保存（内容のみ・金額は毎回入力し直す）
+    // 採番をインクリメント＆次回のために明細を保存（場所/お客様名/内容のみ・撮影日と金額は毎回入力）
     bumpInvNo();
-    saveLastItems(validItems.map(it => ({ content: it.content, amount: "" })));
+    saveLastItems(validItems.map(it => ({
+      shootDate: "",
+      location: it.location || "",
+      customerName: it.customerName || "",
+      content: it.content,
+      amount: ""
+    })));
     refreshPreview();
   }catch(err){
     console.error(err);
@@ -811,7 +860,6 @@ function openSettings(){
   $("sIssuerAddress").value   = settings.issuer.address || "";
 
   $("sRecipCompany").value    = settings.recipient.company || "";
-  $("sRecipPerson").value     = settings.recipient.person || "";
 
   $("sBankName").value         = settings.bank.bankName || "";
   $("sBankBranch").value       = settings.bank.branch || "";
@@ -850,7 +898,7 @@ function saveFromModal(){
   settings.issuer.address        = $("sIssuerAddress").value.trim();
 
   settings.recipient.company = $("sRecipCompany").value.trim();
-  settings.recipient.person  = $("sRecipPerson").value.trim();
+  settings.recipient.person  = "";
 
   settings.bank.bankName     = $("sBankName").value.trim();
   settings.bank.branch       = $("sBankBranch").value.trim();
@@ -878,10 +926,16 @@ function init(){
   const iso = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
   $("fDate").value = iso;
 
-  // 明細を初期化（前回入力分があれば復元、なければ空1行）
+  // 明細を初期化（前回入力分の場所/お客様名/内容を復元、なければ空1行）
   const saved = loadLastItems();
   if(saved && saved.length > 0){
-    saved.forEach(it => addItem({ content: it.content || "", amount: it.amount || "" }));
+    saved.forEach(it => addItem({
+      shootDate: "",
+      location: it.location || "",
+      customerName: it.customerName || "",
+      content: it.content || "",
+      amount: ""
+    }));
   } else {
     addItem();
   }
