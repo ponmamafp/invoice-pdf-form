@@ -123,15 +123,16 @@
   .pdf-stage{position:fixed;left:-99999px;top:0;width:794px;background:#fff}
   .pdf-page{width:794px;min-height:1123px;padding:56px 56px;background:#fff;color:#111;font-family:"Noto Sans JP",sans-serif;font-size:12px;line-height:1.6;-webkit-font-smoothing:antialiased}
   .pdf-page .title{font-size:32px;font-weight:700;color:var(--navy);text-align:center;letter-spacing:.6em;padding-left:.6em;border-bottom:3px double var(--navy);padding-bottom:8px;margin-bottom:30px}
-  .pdf-head{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}
-  .pdf-head .l{flex:1}
-  .pdf-head .r{flex:1;text-align:right;font-size:11px;color:#333}
-  .pdf-head .recip-name{font-size:18px;font-weight:700;border-bottom:1px solid var(--navy);padding-bottom:6px;margin-bottom:6px}
-  .pdf-head .recip-person{font-size:13px;color:#333}
-  .pdf-head .meta{display:inline-block;text-align:left}
+  .pdf-head{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px;align-items:flex-start}
+  .pdf-head .l{flex:1;background:var(--navy-soft);border-radius:6px;padding:16px 18px;line-height:1.7;color:#111}
+  .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-end}
+  .pdf-head .recip-name{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
+  .pdf-head .recip-person{font-size:14px;color:#222}
+  .pdf-head .recip-person.solo{font-size:17px;font-weight:700;color:#111}
+  .pdf-head .meta{text-align:left}
   .pdf-head .meta .k{display:inline-block;width:80px;color:#666}
-  .pdf-head .r .issuer-box{margin-top:14px;padding:12px 14px;background:var(--navy-soft);border-radius:6px;font-size:11px;line-height:1.7;text-align:left}
-  .pdf-head .r .issuer-box .name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
+  .pdf-head .r .issuer-box{margin-top:14px;padding:0;background:transparent;font-size:11px;line-height:1.7;text-align:left;color:#333}
+  .pdf-head .r .issuer-box .name{font-size:14px;font-weight:700;color:#111;margin-bottom:4px}
   .pdf-subject{margin:0 0 22px;font-size:14px;font-weight:700;border-left:4px solid var(--navy);padding:4px 0 4px 12px}
   .pdf-amount-hero{background:var(--navy);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:26px;display:flex;justify-content:space-between;align-items:baseline}
   .pdf-amount-hero .lbl{font-size:13px;letter-spacing:.1em}
@@ -206,7 +207,7 @@
 
 <div class="footer-bar">
   <div class="inner">
-    <button type="button" class="btn-primary" id="btnDownload">PDFをダウンロード</button>
+    <button type="button" class="btn-primary" id="btnDownload">PDFを出力</button>
   </div>
 </div>
 
@@ -357,10 +358,6 @@
       <div id="pdfNotes"></div>
     </div>
 
-    <div class="pdf-note">
-      ※ 本請求書は適格請求書（インボイス）の記載要件に基づいて作成しています。<br>
-      ※ 源泉徴収税額は税抜金額に対して10.21%（100万円超部分は20.42%）を適用しています。
-    </div>
   </div>
 </div>
 
@@ -407,6 +404,7 @@ const CONFIG = {
 };
 
 const STORAGE_KEY = "invoiceFormSettings_v1";
+const ITEMS_KEY   = "invoiceFormLastItems_v1";
 
 /* =========================================================================
    Storage
@@ -423,6 +421,17 @@ function loadSettings(){
 }
 function saveSettings(s){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+}
+function saveLastItems(items){
+  try{ localStorage.setItem(ITEMS_KEY, JSON.stringify(items)); }catch(_){}
+}
+function loadLastItems(){
+  try{
+    const raw = localStorage.getItem(ITEMS_KEY);
+    if(!raw) return null;
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : null;
+  }catch(_){ return null; }
 }
 function deepMerge(base, over){
   for(const k in over){
@@ -541,8 +550,10 @@ function addItem(initial){
       <span class="suffix">円</span>
     </div>
   `;
-  row.querySelector(".item-content").value = initial.content;
-  row.querySelector(".item-amount").value  = initial.amount;
+  row.querySelector(".item-content").value = initial.content || "";
+  const amtInit = row.querySelector(".item-amount");
+  amtInit.value = initial.amount != null && initial.amount !== "" ? String(initial.amount) : "";
+  formatMoneyInput(amtInit);
   row.querySelector(".item-content").addEventListener("input", refreshPreview);
   const amtEl = row.querySelector(".item-amount");
   amtEl.addEventListener("input", () => {
@@ -651,6 +662,8 @@ async function generatePdf(){
   $("pdfRecipCompany").style.display = recipCompany ? "" : "none";
   $("pdfRecipPerson").textContent  = recipPerson ? recipPerson + " 様" : "";
   $("pdfRecipPerson").style.display = recipPerson ? "" : "none";
+  // 会社名がなく担当者だけのときは大きめに表示
+  $("pdfRecipPerson").classList.toggle("solo", !recipCompany && !!recipPerson);
   $("pdfDate").textContent         = fmtDate(f.date);
   $("pdfInvNo").textContent        = invNo;
   $("pdfDueDate2").textContent     = computeDueDate(f.date, settings.paymentTerms);
@@ -685,7 +698,10 @@ async function generatePdf(){
   $("pdfSubtotal").textContent       = yen(r.subtotal);
   $("pdfTax").textContent            = yen(r.tax);
   $("pdfGross").textContent          = yen(r.grossTotal);
-  $("pdfWithholdLabel").textContent  = settings.withholding.label || "源泉徴収税額";
+  // 源泉ラベル：税抜が100万円を超えたら自動で「10.21% / 20.42%」に切替
+  $("pdfWithholdLabel").textContent  = r.subtotal > settings.withholding.threshold
+    ? "源泉徴収税額（10.21% / 20.42%）"
+    : "源泉徴収税額（10.21%）";
   $("pdfWithhold").textContent       = yenMinus(r.withhold);
   $("pdfPay").textContent            = yen(r.payable);
 
@@ -742,10 +758,39 @@ async function generatePdf(){
 
     const issuer = (settings.issuer.name || "issuer").replace(/[\\\/:*?"<>|]/g, "_");
     const fileName = `請求書_${fmtDateCompact(f.date)}_${issuer}.pdf`;
-    pdf.save(fileName);
 
-    // 採番をインクリメント
+    // PDFメタデータ（共有時のタイトルにも使われる）
+    pdf.setProperties({
+      title: fileName.replace(/\.pdf$/, ""),
+      subject: "請求書",
+      author: settings.issuer.name || "",
+      creator: "Invoice PDF Form"
+    });
+
+    // iOS/モダンブラウザは Web Share API で共有シート直開き
+    // → blob: URLを経由せず、ファイル名が確実に保持される
+    const pdfBlob = pdf.output("blob");
+    const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+    let shared = false;
+    if(navigator.canShare && navigator.canShare({ files: [pdfFile] })){
+      try{
+        await navigator.share({ files: [pdfFile], title: "請求書PDF" });
+        shared = true;
+      }catch(err){
+        if(err && err.name === "AbortError"){
+          // ユーザーが共有シートを閉じた → 採番は進めずに終了
+          return;
+        }
+        // その他エラー → 通常保存にフォールバック
+      }
+    }
+    if(!shared){
+      pdf.save(fileName);
+    }
+
+    // 採番をインクリメント＆次回のために明細を保存
     bumpInvNo();
+    saveLastItems(validItems);
     refreshPreview();
   }catch(err){
     console.error(err);
@@ -842,8 +887,13 @@ function init(){
   const iso = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
   $("fDate").value = iso;
 
-  // 明細を1行で初期化
-  addItem();
+  // 明細を初期化（前回入力分があれば復元、なければ空1行）
+  const saved = loadLastItems();
+  if(saved && saved.length > 0){
+    saved.forEach(it => addItem({ content: it.content || "", amount: it.amount || "" }));
+  } else {
+    addItem();
+  }
   $("btnAddItem").addEventListener("click", () => { addItem(); });
 
   $("fTravel").addEventListener("input", () => {
