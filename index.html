@@ -124,15 +124,15 @@
   .pdf-page{width:794px;min-height:1123px;padding:56px 56px;background:#fff;color:#111;font-family:"Noto Sans JP",sans-serif;font-size:12px;line-height:1.6;-webkit-font-smoothing:antialiased}
   .pdf-page .title{font-size:32px;font-weight:700;color:var(--navy);text-align:center;letter-spacing:.6em;padding-left:.6em;border-bottom:3px double var(--navy);padding-bottom:8px;margin-bottom:30px}
   .pdf-head{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px;align-items:flex-start}
-  .pdf-head .l{flex:1;background:var(--navy-soft);border-radius:6px;padding:16px 18px;line-height:1.7;color:#111}
+  .pdf-head .l{flex:1;padding:0;line-height:1.7;color:#111}
   .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-end}
   .pdf-head .recip-name{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
   .pdf-head .recip-person{font-size:14px;color:#222}
   .pdf-head .recip-person.solo{font-size:17px;font-weight:700;color:#111}
-  .pdf-head .meta{text-align:left}
-  .pdf-head .meta .k{display:inline-block;width:80px;color:#666}
-  .pdf-head .r .issuer-box{margin-top:14px;padding:0;background:transparent;font-size:11px;line-height:1.7;text-align:left;color:#333}
-  .pdf-head .r .issuer-box .name{font-size:14px;font-weight:700;color:#111;margin-bottom:4px}
+  .pdf-head .meta{text-align:right}
+  .pdf-head .meta .k{display:inline-block;width:80px;color:#666;text-align:left}
+  .pdf-head .r .issuer-box{margin-top:14px;padding:0;background:transparent;font-size:11px;line-height:1.7;text-align:right;color:#333}
+  .pdf-head .r .issuer-box .name{font-size:13px;font-weight:400;color:#111;margin-bottom:2px}
   .pdf-subject{margin:0 0 22px;font-size:14px;font-weight:700;border-left:4px solid var(--navy);padding:4px 0 4px 12px}
   .pdf-amount-hero{background:var(--navy);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:26px;display:flex;justify-content:space-between;align-items:baseline}
   .pdf-amount-hero .lbl{font-size:13px;letter-spacing:.1em}
@@ -242,6 +242,7 @@
         <div class="field"><label for="sIssuerName">氏名／会社名</label><input type="text" id="sIssuerName" placeholder="山田 太郎"></div>
         <div class="field"><label for="sIssuerReg">インボイス登録番号</label><input type="text" id="sIssuerReg" placeholder="T1234567890123"></div>
         <div class="field"><label for="sIssuerContact">連絡先（メール／電話）</label><input type="text" id="sIssuerContact" placeholder="mail@example.com"></div>
+        <div class="field"><label for="sIssuerPostal">郵便番号（任意）</label><input type="text" id="sIssuerPostal" inputmode="numeric" placeholder="123-4567"></div>
         <div class="field"><label for="sIssuerAddress">住所（任意）</label><input type="text" id="sIssuerAddress" placeholder="東京都〇〇区..."></div>
       </div>
 
@@ -310,6 +311,7 @@
         </div>
         <div class="issuer-box">
           <div class="name" id="pdfIssuerName">氏名／会社名</div>
+          <div id="pdfIssuerPostal"></div>
           <div id="pdfIssuerAddress"></div>
           <div id="pdfIssuerContact">連絡先</div>
         </div>
@@ -370,6 +372,7 @@ const CONFIG = {
     name: "",
     registrationNo: "",
     contact: "",
+    postalCode: "",
     address: ""
   },
   recipient: {
@@ -708,6 +711,10 @@ async function generatePdf(){
   $("pdfIssuerName").textContent     = settings.issuer.name || "";
   $("pdfIssuerContact").textContent  = settings.issuer.contact || "";
   $("pdfIssuerAddress").textContent  = settings.issuer.address || "";
+  // 郵便番号は〒を自動付与（空なら非表示）
+  const postal = (settings.issuer.postalCode || "").trim();
+  $("pdfIssuerPostal").textContent   = postal ? "〒" + postal.replace(/^〒\s*/, "") : "";
+  $("pdfIssuerPostal").style.display = postal ? "" : "none";
   $("pdfRegNo").textContent          = settings.issuer.registrationNo || "";
   $("pdfRegNoRow").style.display     = settings.issuer.registrationNo ? "" : "none";
 
@@ -767,26 +774,7 @@ async function generatePdf(){
       creator: "Invoice PDF Form"
     });
 
-    // iOS/モダンブラウザは Web Share API で共有シート直開き
-    // → blob: URLを経由せず、ファイル名が確実に保持される
-    const pdfBlob = pdf.output("blob");
-    const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-    let shared = false;
-    if(navigator.canShare && navigator.canShare({ files: [pdfFile] })){
-      try{
-        await navigator.share({ files: [pdfFile], title: "請求書PDF" });
-        shared = true;
-      }catch(err){
-        if(err && err.name === "AbortError"){
-          // ユーザーが共有シートを閉じた → 採番は進めずに終了
-          return;
-        }
-        // その他エラー → 通常保存にフォールバック
-      }
-    }
-    if(!shared){
-      pdf.save(fileName);
-    }
+    pdf.save(fileName);
 
     // 採番をインクリメント＆次回のために明細を保存
     bumpInvNo();
@@ -818,6 +806,7 @@ function openSettings(){
   $("sIssuerName").value      = settings.issuer.name || "";
   $("sIssuerReg").value       = settings.issuer.registrationNo || "";
   $("sIssuerContact").value   = settings.issuer.contact || "";
+  $("sIssuerPostal").value    = settings.issuer.postalCode || "";
   $("sIssuerAddress").value   = settings.issuer.address || "";
 
   $("sRecipCompany").value    = settings.recipient.company || "";
@@ -856,6 +845,7 @@ function saveFromModal(){
   settings.issuer.name           = $("sIssuerName").value.trim();
   settings.issuer.registrationNo = $("sIssuerReg").value.trim();
   settings.issuer.contact        = $("sIssuerContact").value.trim();
+  settings.issuer.postalCode     = $("sIssuerPostal").value.trim();
   settings.issuer.address        = $("sIssuerAddress").value.trim();
 
   settings.recipient.company = $("sRecipCompany").value.trim();
