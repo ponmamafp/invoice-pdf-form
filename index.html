@@ -152,7 +152,10 @@
   .pdf-bank .row{display:flex;padding:3px 0}
   .pdf-bank .row .k{width:90px;color:#666}
   .pdf-bank .row .v{flex:1}
-  .pdf-note{margin-top:18px;font-size:10px;color:#777;line-height:1.6}
+  .pdf-bikou{margin-top:18px;border:1px solid var(--line);border-radius:4px;padding:12px 16px;font-size:11px;background:#fff;line-height:1.7}
+  .pdf-bikou h4{margin:0 0 6px;font-size:11px;color:var(--navy);font-weight:700;border-bottom:1px solid #E5E7EB;padding-bottom:4px}
+  .pdf-bikou #pdfNotes{white-space:pre-wrap;color:#333}
+  .pdf-note{margin-top:14px;font-size:10px;color:#777;line-height:1.6}
 </style>
 </head>
 <body>
@@ -268,6 +271,14 @@
         </div>
       </div>
 
+      <div class="sec">
+        <h3>備考（PDFに表示される文言）</h3>
+        <div class="field">
+          <label for="sNotes">備考</label>
+          <textarea id="sNotes" rows="3" placeholder="恐れ入りますが、振込手数料はご負担くださいますようお願い申し上げます。"></textarea>
+        </div>
+      </div>
+
     </div>
     <div class="modal-foot">
       <button type="button" class="cancel" id="btnSettingsCancel">キャンセル</button>
@@ -335,6 +346,11 @@
       <div class="row"><span class="k">口座名義</span><span class="v" id="pdfBankAccountName">ヤマダ タロウ</span></div>
     </div>
 
+    <div class="pdf-bikou" id="pdfBikou">
+      <h4>備考</h4>
+      <div id="pdfNotes"></div>
+    </div>
+
     <div class="pdf-note">
       ※ 本請求書は適格請求書（インボイス）の記載要件に基づいて作成しています。<br>
       ※ 源泉徴収税額は税抜金額に対して10.21%（100万円超部分は20.42%）を適用しています。
@@ -376,6 +392,7 @@ const CONFIG = {
     type: "endOfNextMonth",
     days: 30  // daysAfter のときだけ使う
   },
+  notes: "恐れ入りますが、振込手数料はご負担くださいますようお願い申し上げます。",
   invoiceNo: {
     prefix: "INV-",
     nextSeq: 1,
@@ -654,6 +671,11 @@ async function generatePdf(){
   $("pdfBankNo").textContent          = settings.bank.accountNo || "";
   $("pdfBankAccountName").textContent = settings.bank.accountName || "";
 
+  // 備考（空なら非表示）
+  const notes = (settings.notes || "").trim();
+  $("pdfNotes").textContent = notes;
+  $("pdfBikou").style.display = notes ? "" : "none";
+
   // フォント読み込み完了を待つ
   if(document.fonts && document.fonts.ready){
     try{ await document.fonts.ready; }catch(_){}
@@ -737,6 +759,8 @@ function openSettings(){
   $("sPayDays").value = terms.days ?? 30;
   updatePayDaysVisibility();
 
+  $("sNotes").value = settings.notes || "";
+
   $("settingsMask").classList.add("open");
   document.body.style.overflow = "hidden";
 }
@@ -771,6 +795,8 @@ function saveFromModal(){
   settings.paymentTerms = settings.paymentTerms || {};
   settings.paymentTerms.type = $("sPayType").value || "endOfNextMonth";
   settings.paymentTerms.days = Math.max(0, parseInt($("sPayDays").value || "30", 10) || 30);
+
+  settings.notes = $("sNotes").value;
 
   saveSettings(settings);
   refreshPreview();
