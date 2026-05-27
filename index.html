@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F3864">
+<title>請求書PDF作成</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --navy:#1F3864;
+    --navy-soft:#EAEFF7;
+    --line:#BFBFBF;
+    --ink:#222;
+    --muted:#666;
+    --bg:#F7F8FB;
+    --danger:#C0392B;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;-webkit-text-size-adjust:100%}
+  body{padding-bottom:calc(96px + env(safe-area-inset-bottom));min-height:100dvh}
+  header.app{position:sticky;top:0;background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:10;box-shadow:0 1px 0 rgba(0,0,0,.05)}
+  header.app h1{font-size:17px;font-weight:700;margin:0;letter-spacing:.02em}
+  header.app .actions{display:flex;gap:8px}
+  header.app button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;min-height:36px;cursor:pointer;font-family:inherit}
+  header.app button:active{background:rgba(255,255,255,.28)}
+  main{max-width:560px;margin:0 auto;padding:18px 16px 24px}
+  .field{margin:0 0 18px}
+  .field label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin:0 0 8px;letter-spacing:.02em}
+  .field .hint{font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+  .field select{
+    width:100%;
+    font-size:16px;
+    font-family:inherit;
+    color:var(--ink);
+    background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path fill='%231F3864' d='M6 8L2 4h8z'/></svg>") no-repeat right 14px center;
+    background-size:10px;
+    border:1px solid #D0D5DD;
+    border-radius:10px;
+    padding:14px 36px 14px 14px;
+    line-height:1.5;
+    appearance:none;
+    -webkit-appearance:none;
+    min-height:48px;
+  }
+  .field select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,56,100,.12)}
+  .field input[type="date"],
+  .field input[type="text"],
+  .field input[type="number"],
+  .field textarea{
+    width:100%;
+    font-size:16px;
+    font-family:inherit;
+    color:var(--ink);
+    background:#fff;
+    border:1px solid #D0D5DD;
+    border-radius:10px;
+    padding:14px 14px;
+    line-height:1.5;
+    appearance:none;
+    -webkit-appearance:none;
+    min-height:48px;
+  }
+  .field textarea{resize:vertical;min-height:96px}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,56,100,.12)}
+  .field .with-suffix{position:relative}
+  .field .with-suffix input{padding-right:44px}
+  .field .with-suffix .suffix{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+  .required{color:var(--danger);font-size:12px;margin-left:4px}
+  .item-row{background:#fff;border:1px solid #D0D5DD;border-radius:10px;padding:12px;margin-bottom:10px}
+  .item-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .item-row-no{font-size:12px;color:var(--navy);font-weight:700;letter-spacing:.04em}
+  .item-del{background:transparent;border:none;color:var(--muted);font-size:22px;width:34px;height:34px;border-radius:8px;cursor:pointer;line-height:1;font-family:inherit;padding:0}
+  .item-del:active{background:#F1F3F8;color:var(--danger)}
+  .item-row textarea{display:block;width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid #D0D5DD;border-radius:8px;padding:10px 12px;margin-bottom:8px;min-height:64px;line-height:1.5;resize:vertical;appearance:none;-webkit-appearance:none}
+  .item-row .with-suffix input{width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid #D0D5DD;border-radius:8px;padding:10px 40px 10px 12px;min-height:44px;appearance:none;-webkit-appearance:none}
+  .item-row textarea:focus,.item-row input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,56,100,.12)}
+  .btn-add{display:block;width:100%;background:#fff;color:var(--navy);border:1px dashed var(--navy);font-size:14px;font-weight:600;font-family:inherit;padding:12px;border-radius:10px;min-height:44px;cursor:pointer;letter-spacing:.04em;margin-top:4px}
+  .btn-add:active{background:var(--navy-soft)}
+  .preview{background:var(--navy-soft);border-radius:12px;padding:14px 16px;margin:6px 0 18px;border:1px solid #DDE5F1}
+  .preview .row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted);padding:3px 0}
+  .preview .row.total{font-size:15px;color:var(--navy);font-weight:700;border-top:1px solid #C7D2E5;margin-top:6px;padding-top:8px}
+  .preview .row .v{font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink)}
+  .preview .row.total .v{color:var(--navy)}
+  .preview .row.minus .v{color:var(--danger)}
+  .footer-bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:saturate(160%) blur(10px);-webkit-backdrop-filter:saturate(160%) blur(10px);border-top:1px solid #E5E7EB;padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:20}
+  .footer-bar .inner{max-width:560px;margin:0 auto}
+  .btn-primary{display:block;width:100%;background:var(--navy);color:#fff;border:none;font-size:16px;font-weight:700;font-family:inherit;padding:16px;border-radius:12px;min-height:52px;cursor:pointer;letter-spacing:.04em;box-shadow:0 2px 0 rgba(31,56,100,.18)}
+  .btn-primary:active{transform:translateY(1px);box-shadow:none}
+  .btn-primary:disabled{background:#9AA3B2;box-shadow:none}
+  .invoice-meta{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+
+  /* Modal */
+  .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-start;justify-content:center;padding:0;z-index:30;overflow-y:auto}
+  .modal-mask.open{display:flex}
+  .modal{background:#fff;width:100%;max-width:560px;margin:0;border-radius:0;padding:0;max-height:100dvh;display:flex;flex-direction:column}
+  @media(min-width:600px){
+    .modal-mask{padding:24px;align-items:center}
+    .modal{border-radius:14px;max-height:calc(100dvh - 48px)}
+  }
+  .modal-head{position:sticky;top:0;background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;z-index:1}
+  .modal-head h2{font-size:16px;font-weight:700;margin:0}
+  .modal-head button{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.32);padding:8px 14px;border-radius:8px;font-size:13px;font-family:inherit;min-height:36px;cursor:pointer}
+  .modal-body{padding:18px 16px;overflow-y:auto;flex:1}
+  .modal-body .sec{margin-bottom:22px}
+  .modal-body .sec h3{font-size:13px;color:var(--navy);font-weight:700;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid #E5E7EB;letter-spacing:.04em}
+  .modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid #E5E7EB;padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px}
+  .modal-foot button{flex:1;font-size:15px;font-weight:700;font-family:inherit;padding:14px;border-radius:10px;border:none;cursor:pointer;min-height:48px}
+  .modal-foot .save{background:var(--navy);color:#fff}
+  .modal-foot .cancel{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+  .inv-no-row{display:flex;align-items:center;gap:10px;background:var(--navy-soft);padding:10px 12px;border-radius:8px;margin-bottom:10px}
+  .inv-no-row .label{font-size:12px;color:var(--muted)}
+  .inv-no-row .value{font-size:15px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;flex:1}
+  .inv-no-row button{font-size:12px;background:#fff;color:var(--navy);border:1px solid var(--navy);padding:6px 10px;border-radius:6px;font-family:inherit;cursor:pointer;min-height:32px}
+
+  /* PDF render area (offscreen) */
+  .pdf-stage{position:fixed;left:-99999px;top:0;width:794px;background:#fff}
+  .pdf-page{width:794px;min-height:1123px;padding:56px 56px;background:#fff;color:#111;font-family:"Noto Sans JP",sans-serif;font-size:12px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .pdf-page .title{font-size:32px;font-weight:700;color:var(--navy);text-align:center;letter-spacing:.6em;padding-left:.6em;border-bottom:3px double var(--navy);padding-bottom:8px;margin-bottom:30px}
+  .pdf-head{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px}
+  .pdf-head .l{flex:1}
+  .pdf-head .r{flex:1;text-align:right;font-size:11px;color:#333}
+  .pdf-head .recip-name{font-size:18px;font-weight:700;border-bottom:1px solid var(--navy);padding-bottom:6px;margin-bottom:6px}
+  .pdf-head .recip-person{font-size:13px;color:#333}
+  .pdf-head .meta{display:inline-block;text-align:left}
+  .pdf-head .meta .k{display:inline-block;width:80px;color:#666}
+  .pdf-issuer{margin:18px 0 26px;padding:14px 16px;background:var(--navy-soft);border-radius:6px;font-size:11px;line-height:1.7}
+  .pdf-issuer .name{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px}
+  .pdf-subject{margin:0 0 22px;font-size:14px;font-weight:700;border-left:4px solid var(--navy);padding:4px 0 4px 12px}
+  .pdf-amount-hero{background:var(--navy);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:26px;display:flex;justify-content:space-between;align-items:baseline}
+  .pdf-amount-hero .lbl{font-size:13px;letter-spacing:.1em}
+  .pdf-amount-hero .val{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+  .pdf-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12px}
+  .pdf-table th{background:var(--navy);color:#fff;font-weight:500;padding:10px 12px;text-align:center;border:1px solid var(--navy)}
+  .pdf-table td{padding:10px 12px;border:1px solid var(--line);background:#fff}
+  .pdf-table td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .pdf-table td.c{text-align:center}
+  .pdf-summary{margin-left:auto;width:340px;border:1px solid var(--line);border-radius:4px;overflow:hidden;font-size:12px}
+  .pdf-summary .row{display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #E5E7EB}
+  .pdf-summary .row:last-child{border-bottom:none}
+  .pdf-summary .row .k{color:#555}
+  .pdf-summary .row .v{font-variant-numeric:tabular-nums;font-weight:500}
+  .pdf-summary .row.minus .v{color:var(--danger)}
+  .pdf-summary .row.grand{background:var(--navy-soft);font-weight:700}
+  .pdf-summary .row.grand .k,.pdf-summary .row.grand .v{color:var(--navy);font-size:14px}
+  .pdf-bank{margin-top:28px;border:1px solid var(--line);border-radius:4px;padding:14px 16px;font-size:12px;background:#fff}
+  .pdf-bank h4{margin:0 0 8px;font-size:12px;color:var(--navy);font-weight:700;border-bottom:1px solid #E5E7EB;padding-bottom:6px}
+  .pdf-bank .row{display:flex;padding:3px 0}
+  .pdf-bank .row .k{width:90px;color:#666}
+  .pdf-bank .row .v{flex:1}
+  .pdf-note{margin-top:18px;font-size:10px;color:#777;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <h1>請求書PDF作成</h1>
+  <div class="actions">
+    <button type="button" id="btnSettings" aria-label="設定">設定</button>
+  </div>
+</header>
+
+<main>
+  <form id="invForm" autocomplete="off" novalidate>
+    <div class="field">
+      <label for="fDate">発行日<span class="required">*</span></label>
+      <input type="date" id="fDate" required>
+    </div>
+
+    <div class="field">
+      <label>明細<span class="required">*</span><span class="hint">例：2026年5月分 撮影費</span></label>
+      <div id="itemsList"></div>
+      <button type="button" class="btn-add" id="btnAddItem">＋ 明細を追加</button>
+    </div>
+
+    <div class="field">
+      <label for="fTravel">交通費<span class="hint">任意・源泉徴収の対象に含めます</span></label>
+      <div class="with-suffix">
+        <input type="number" id="fTravel" inputmode="numeric" min="0" step="1" placeholder="">
+        <span class="suffix">円</span>
+      </div>
+    </div>
+
+    <div class="preview" id="preview" aria-live="polite">
+      <div class="row"><span>税抜合計</span><span class="v" id="pSubtotal">¥0</span></div>
+      <div class="row"><span>消費税（10%）</span><span class="v" id="pTax">¥0</span></div>
+      <div class="row"><span>合計（税込）</span><span class="v" id="pGross">¥0</span></div>
+      <div class="row minus"><span>源泉徴収（10.21%）</span><span class="v" id="pWith">▲¥0</span></div>
+      <div class="row total"><span>ご請求金額（振込額）</span><span class="v" id="pPay">¥0</span></div>
+    </div>
+  </form>
+  <div class="invoice-meta">請求書No. <span id="nextInvNo">INV-0001</span> として発行されます</div>
+</main>
+
+<div class="footer-bar">
+  <div class="inner">
+    <button type="button" class="btn-primary" id="btnDownload">PDFをダウンロード</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-mask" id="settingsMask" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="settingsTitle">設定</h2>
+      <button type="button" id="btnSettingsClose">閉じる</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="sec">
+        <h3>請求書No.</h3>
+        <div class="inv-no-row">
+          <span class="label">次回採番:</span>
+          <span class="value" id="sCurrentNo">INV-0001</span>
+          <button type="button" id="btnResetNo">連番リセット</button>
+        </div>
+        <div class="field">
+          <label for="sPrefix">プレフィックス</label>
+          <input type="text" id="sPrefix" placeholder="INV-">
+        </div>
+        <div class="field">
+          <label for="sNextSeq">次回シーケンス番号</label>
+          <input type="number" id="sNextSeq" inputmode="numeric" min="1" step="1" placeholder="1">
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>発行元情報（あなたの情報）</h3>
+        <div class="field"><label for="sIssuerName">氏名／会社名</label><input type="text" id="sIssuerName" placeholder="山田 太郎"></div>
+        <div class="field"><label for="sIssuerReg">インボイス登録番号</label><input type="text" id="sIssuerReg" placeholder="T1234567890123"></div>
+        <div class="field"><label for="sIssuerContact">連絡先（メール／電話）</label><input type="text" id="sIssuerContact" placeholder="mail@example.com"></div>
+        <div class="field"><label for="sIssuerAddress">住所（任意）</label><input type="text" id="sIssuerAddress" placeholder="東京都〇〇区..."></div>
+      </div>
+
+      <div class="sec">
+        <h3>宛先（請求先）</h3>
+        <div class="field"><label for="sRecipCompany">会社名</label><input type="text" id="sRecipCompany" placeholder="株式会社○○○○"></div>
+        <div class="field"><label for="sRecipPerson">担当者名</label><input type="text" id="sRecipPerson" placeholder="ご担当者"></div>
+      </div>
+
+      <div class="sec">
+        <h3>振込先</h3>
+        <div class="field"><label for="sBankName">銀行名</label><input type="text" id="sBankName" placeholder="○○銀行"></div>
+        <div class="field"><label for="sBankBranch">支店名</label><input type="text" id="sBankBranch" placeholder="○○支店"></div>
+        <div class="field"><label for="sBankType">口座種別</label><input type="text" id="sBankType" placeholder="普通"></div>
+        <div class="field"><label for="sBankNo">口座番号</label><input type="text" id="sBankNo" inputmode="numeric" placeholder="1234567"></div>
+        <div class="field"><label for="sBankAccountName">口座名義（カナ）</label><input type="text" id="sBankAccountName" placeholder="ヤマダ タロウ"></div>
+      </div>
+
+      <div class="sec">
+        <h3>支払条件</h3>
+        <div class="field">
+          <label for="sPayType">支払期限の決め方</label>
+          <select id="sPayType">
+            <option value="endOfNextMonth">翌月末払い（推奨）</option>
+            <option value="endOfMonth">当月末払い</option>
+            <option value="endOfMonthAfterNext">翌々月末払い</option>
+            <option value="daysAfter">発行日から〇日後</option>
+          </select>
+        </div>
+        <div class="field" id="sPayDaysWrap" style="display:none">
+          <label for="sPayDays">日数（発行日からの日数）</label>
+          <input type="number" id="sPayDays" inputmode="numeric" min="0" step="1" placeholder="30">
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="cancel" id="btnSettingsCancel">キャンセル</button>
+      <button type="button" class="save" id="btnSettingsSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF render stage (offscreen) -->
+<div class="pdf-stage" aria-hidden="true">
+  <div class="pdf-page" id="pdfPage">
+    <div class="title">請　求　書</div>
+    <div class="pdf-head">
+      <div class="l">
+        <div class="recip-name" id="pdfRecipCompany">株式会社○○○○ 御中</div>
+        <div class="recip-person" id="pdfRecipPerson">ご担当者 様</div>
+      </div>
+      <div class="r">
+        <div class="meta">
+          <div><span class="k">発行日</span><span id="pdfDate">2026/05/27</span></div>
+          <div><span class="k">請求書No.</span><span id="pdfInvNo">INV-0001</span></div>
+          <div><span class="k">支払期限</span><span id="pdfDueDate">2026/06/26</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdf-amount-hero">
+      <span class="lbl">ご請求金額（振込額）</span>
+      <span class="val" id="pdfHeroAmount">¥0</span>
+    </div>
+
+    <table class="pdf-table">
+      <thead>
+        <tr>
+          <th style="width:55%">内容</th>
+          <th style="width:10%">数量</th>
+          <th style="width:17.5%">単価（税込）</th>
+          <th style="width:17.5%">金額（税込）</th>
+        </tr>
+      </thead>
+      <tbody id="pdfRows"></tbody>
+    </table>
+
+    <div class="pdf-summary">
+      <div class="row"><span class="k">税抜合計金額</span><span class="v" id="pdfSubtotal">¥0</span></div>
+      <div class="row"><span class="k">消費税額（10%）</span><span class="v" id="pdfTax">¥0</span></div>
+      <div class="row"><span class="k">合計金額（税込）</span><span class="v" id="pdfGross">¥0</span></div>
+      <div class="row minus"><span class="k" id="pdfWithholdLabel">源泉徴収税額（10.21%）</span><span class="v" id="pdfWithhold">▲¥0</span></div>
+      <div class="row grand"><span class="k">ご請求金額（振込額）</span><span class="v" id="pdfPay">¥0</span></div>
+    </div>
+
+    <div class="pdf-issuer">
+      <div class="name" id="pdfIssuerName">氏名／会社名</div>
+      <div id="pdfIssuerReg">登録番号: T1234567890123</div>
+      <div id="pdfIssuerContact">連絡先</div>
+      <div id="pdfIssuerAddress"></div>
+    </div>
+
+    <div class="pdf-bank">
+      <h4>振込先</h4>
+      <div class="row"><span class="k">銀行名</span><span class="v" id="pdfBankName">○○銀行</span></div>
+      <div class="row"><span class="k">支店名</span><span class="v" id="pdfBankBranch">○○支店</span></div>
+      <div class="row"><span class="k">口座種別</span><span class="v" id="pdfBankType">普通</span></div>
+      <div class="row"><span class="k">口座番号</span><span class="v" id="pdfBankNo">1234567</span></div>
+      <div class="row"><span class="k">口座名義</span><span class="v" id="pdfBankAccountName">ヤマダ タロウ</span></div>
+    </div>
+
+    <div class="pdf-note">
+      ※ 本請求書は適格請求書（インボイス）の記載要件に基づいて作成しています。<br>
+      ※ 源泉徴収税額は税抜金額に対して10.21%（100万円超部分は20.42%）を適用しています。
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   CONFIG（デフォルト値・後から編集しやすいよう冒頭にまとめる）
+   ========================================================================= */
+const CONFIG = {
+  issuer: {
+    name: "",
+    registrationNo: "",
+    contact: "",
+    address: ""
+  },
+  recipient: {
+    company: "",
+    person: ""
+  },
+  bank: {
+    bankName: "",
+    branch: "",
+    accountType: "",
+    accountNo: "",
+    accountName: ""
+  },
+  consumptionTaxRate: 0.10,
+  withholding: {
+    standardRate: 0.1021,
+    highRate: 0.2042,
+    threshold: 1000000,
+    label: "源泉徴収税額（10.21%）"
+  },
+  paymentTerms: {
+    // type: "endOfMonth" | "endOfNextMonth" | "endOfMonthAfterNext" | "daysAfter"
+    type: "endOfNextMonth",
+    days: 30  // daysAfter のときだけ使う
+  },
+  invoiceNo: {
+    prefix: "INV-",
+    nextSeq: 1,
+    padding: 4
+  }
+};
+
+const STORAGE_KEY = "invoiceFormSettings_v1";
+
+/* =========================================================================
+   Storage
+   ========================================================================= */
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(CONFIG);
+    const saved = JSON.parse(raw);
+    return deepMerge(structuredClone(CONFIG), saved);
+  }catch(_){
+    return structuredClone(CONFIG);
+  }
+}
+function saveSettings(s){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+}
+function deepMerge(base, over){
+  for(const k in over){
+    if(over[k] && typeof over[k]==="object" && !Array.isArray(over[k])){
+      base[k] = deepMerge(base[k]||{}, over[k]);
+    } else {
+      base[k] = over[k];
+    }
+  }
+  return base;
+}
+
+let settings = loadSettings();
+
+/* =========================================================================
+   計算ロジック（国税庁ルール準拠）
+   - 報酬+交通費を合算して税抜化（÷1.10、小数点以下切り捨て）
+   - 源泉徴収＝税抜合計×10.21%（100万円超部分は20.42%）
+   - 振込額 = (報酬+交通費) − 源泉徴収額
+   ========================================================================= */
+function floor0(n){ return Math.floor(n); }
+
+function calc(amountIncl, travelIncl){
+  const grossTotal = (amountIncl|0) + (travelIncl|0);
+  // 税抜合計 = ROUNDDOWN(税込 ÷ (1 + 税率))
+  // 浮動小数点誤差を避けるため整数比で計算する
+  const SCALE = 10000;
+  const denom = Math.round((1 + settings.consumptionTaxRate) * SCALE);
+  const subtotal   = floor0((grossTotal * SCALE) / denom);
+  const tax        = grossTotal - subtotal;
+
+  const w = settings.withholding;
+  let withhold = 0;
+  if(subtotal <= w.threshold){
+    withhold = floor0(subtotal * w.standardRate);
+  } else {
+    withhold = floor0(w.threshold * w.standardRate + (subtotal - w.threshold) * w.highRate);
+  }
+  const payable = grossTotal - withhold;
+
+  return { grossTotal, subtotal, tax, withhold, payable };
+}
+
+function yen(n){
+  return "¥" + (n|0).toLocaleString("ja-JP");
+}
+function yenMinus(n){
+  return "▲¥" + (n|0).toLocaleString("ja-JP");
+}
+
+/* =========================================================================
+   請求書No.
+   ========================================================================= */
+function currentInvNoString(){
+  const p = settings.invoiceNo.prefix ?? "";
+  const seq = settings.invoiceNo.nextSeq|0;
+  const pad = settings.invoiceNo.padding|0 || 4;
+  return p + String(seq).padStart(pad, "0");
+}
+function bumpInvNo(){
+  settings.invoiceNo.nextSeq = (settings.invoiceNo.nextSeq|0) + 1;
+  saveSettings(settings);
+}
+
+/* =========================================================================
+   フォーム → プレビュー
+   ========================================================================= */
+const $ = (id)=>document.getElementById(id);
+
+function getItems(){
+  return [...document.querySelectorAll("#itemsList .item-row")].map(r => ({
+    content: r.querySelector(".item-content").value.trim(),
+    amount: parseInt(r.querySelector(".item-amount").value || "0", 10) || 0
+  }));
+}
+
+function readForm(){
+  return {
+    date: $("fDate").value,
+    items: getItems(),
+    travel: parseInt($("fTravel").value || "0", 10) || 0
+  };
+}
+
+function sumItems(items){
+  return items.reduce((s, i) => s + (i.amount|0), 0);
+}
+
+function addItem(initial){
+  initial = initial || { content:"", amount:"" };
+  const row = document.createElement("div");
+  row.className = "item-row";
+  row.innerHTML = `
+    <div class="item-row-head">
+      <span class="item-row-no">明細</span>
+      <button type="button" class="item-del" aria-label="この明細を削除">×</button>
+    </div>
+    <textarea class="item-content" rows="2"></textarea>
+    <div class="with-suffix">
+      <input class="item-amount" type="number" inputmode="numeric" min="0" step="1" placeholder="">
+      <span class="suffix">円</span>
+    </div>
+  `;
+  row.querySelector(".item-content").value = initial.content;
+  row.querySelector(".item-amount").value  = initial.amount;
+  row.querySelector(".item-content").addEventListener("input", refreshPreview);
+  row.querySelector(".item-amount").addEventListener("input", refreshPreview);
+  row.querySelector(".item-del").addEventListener("click", () => {
+    const rows = document.querySelectorAll("#itemsList .item-row");
+    if(rows.length <= 1){
+      row.querySelector(".item-content").value = "";
+      row.querySelector(".item-amount").value = "";
+    } else {
+      row.remove();
+      renumberItems();
+    }
+    refreshPreview();
+  });
+  $("itemsList").appendChild(row);
+  renumberItems();
+}
+
+function renumberItems(){
+  const rows = document.querySelectorAll("#itemsList .item-row");
+  rows.forEach((r, i) => {
+    r.querySelector(".item-row-no").textContent = "明細" + (i + 1);
+    r.querySelector(".item-del").style.display = rows.length > 1 ? "" : "none";
+  });
+}
+
+function refreshPreview(){
+  const f = readForm();
+  const itemsTotal = sumItems(f.items);
+  const r = calc(itemsTotal, f.travel);
+  $("pSubtotal").textContent = yen(r.subtotal);
+  $("pTax").textContent      = yen(r.tax);
+  $("pGross").textContent    = yen(r.grossTotal);
+  $("pWith").textContent     = yenMinus(r.withhold);
+  $("pPay").textContent      = yen(r.payable);
+  $("nextInvNo").textContent = currentInvNoString();
+}
+
+/* =========================================================================
+   日付ユーティリティ
+   ========================================================================= */
+function fmtDate(iso){
+  if(!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if(isNaN(d.getTime())) return iso;
+  return d.getFullYear() + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + String(d.getDate()).padStart(2,"0");
+}
+function fmtDateCompact(iso){
+  if(!iso) return "";
+  return iso.replace(/-/g, "");
+}
+function fmtSlash(d){
+  return d.getFullYear() + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + String(d.getDate()).padStart(2,"0");
+}
+function endOfMonth(year, monthZero){
+  // monthZeroは0-11だが、+1して0日目を指すと前月末日（=当該月末日）が返る
+  return new Date(year, monthZero + 1, 0);
+}
+function computeDueDate(iso, terms){
+  if(!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if(isNaN(d.getTime())) return "";
+  const t = (terms && terms.type) || "daysAfter";
+  if(t === "endOfMonth"){
+    return fmtSlash(endOfMonth(d.getFullYear(), d.getMonth()));
+  } else if(t === "endOfNextMonth"){
+    return fmtSlash(endOfMonth(d.getFullYear(), d.getMonth() + 1));
+  } else if(t === "endOfMonthAfterNext"){
+    return fmtSlash(endOfMonth(d.getFullYear(), d.getMonth() + 2));
+  } else {
+    d.setDate(d.getDate() + (((terms && terms.days)|0) || 30));
+    return fmtSlash(d);
+  }
+}
+function paymentTermsLabel(terms){
+  const t = (terms && terms.type) || "daysAfter";
+  if(t === "endOfMonth") return "当月末払い";
+  if(t === "endOfNextMonth") return "翌月末払い";
+  if(t === "endOfMonthAfterNext") return "翌々月末払い";
+  const n = ((terms && terms.days)|0) || 30;
+  return "発行日から" + n + "日後";
+}
+
+/* =========================================================================
+   PDFステージへ反映 → jsPDF + html2canvas
+   ========================================================================= */
+async function generatePdf(){
+  const f = readForm();
+  if(!f.date){ alert("発行日を入力してください"); return; }
+  const validItems = f.items.filter(i => i.content && i.amount > 0);
+  if(validItems.length === 0){
+    alert("明細を1件以上入力してください（内容と金額の両方が必要です）");
+    return;
+  }
+  const itemsTotal = sumItems(validItems);
+  const r = calc(itemsTotal, f.travel);
+  const invNo = currentInvNoString();
+
+  // ステージへ反映
+  $("pdfRecipCompany").textContent = (settings.recipient.company || "") + " 御中";
+  $("pdfRecipPerson").textContent  = (settings.recipient.person  || "") + " 様";
+  $("pdfDate").textContent         = fmtDate(f.date);
+  $("pdfInvNo").textContent        = invNo;
+  $("pdfDueDate").textContent      = computeDueDate(f.date, settings.paymentTerms);
+
+  $("pdfHeroAmount").textContent = yen(r.payable);
+
+  // 明細行
+  const rows = validItems.map(it => ({
+    name: it.content,
+    qty: 1,
+    unit: it.amount,
+    amount: it.amount
+  }));
+  if(f.travel > 0){
+    rows.push({
+      name: "交通費",
+      qty: 1,
+      unit: f.travel,
+      amount: f.travel
+    });
+  }
+  const tbody = $("pdfRows");
+  tbody.innerHTML = rows.map(row => `
+    <tr>
+      <td>${escapeHtml(row.name).replace(/\n/g,"<br>")}</td>
+      <td class="c">${row.qty}</td>
+      <td class="r">${yen(row.unit)}</td>
+      <td class="r">${yen(row.amount)}</td>
+    </tr>
+  `).join("");
+
+  $("pdfSubtotal").textContent       = yen(r.subtotal);
+  $("pdfTax").textContent            = yen(r.tax);
+  $("pdfGross").textContent          = yen(r.grossTotal);
+  $("pdfWithholdLabel").textContent  = settings.withholding.label || "源泉徴収税額";
+  $("pdfWithhold").textContent       = yenMinus(r.withhold);
+  $("pdfPay").textContent            = yen(r.payable);
+
+  $("pdfIssuerName").textContent     = settings.issuer.name || "";
+  $("pdfIssuerReg").textContent      = settings.issuer.registrationNo ? "登録番号: " + settings.issuer.registrationNo : "";
+  $("pdfIssuerContact").textContent  = settings.issuer.contact || "";
+  $("pdfIssuerAddress").textContent  = settings.issuer.address || "";
+
+  $("pdfBankName").textContent        = settings.bank.bankName || "";
+  $("pdfBankBranch").textContent      = settings.bank.branch || "";
+  $("pdfBankType").textContent        = settings.bank.accountType || "";
+  $("pdfBankNo").textContent          = settings.bank.accountNo || "";
+  $("pdfBankAccountName").textContent = settings.bank.accountName || "";
+
+  // フォント読み込み完了を待つ
+  if(document.fonts && document.fonts.ready){
+    try{ await document.fonts.ready; }catch(_){}
+  }
+
+  const node = $("pdfPage");
+  const btn  = $("btnDownload");
+  const oldLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "PDF生成中…";
+
+  try{
+    const canvas = await html2canvas(node, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      windowWidth: 794,
+      logging: false
+    });
+    const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const pageW = 210, pageH = 297;
+    // A4にぴったり収まるよう縦横比を保ったまま縮小して1ページに収める
+    let imgW = pageW;
+    let imgH = (canvas.height * imgW) / canvas.width;
+    if(imgH > pageH){
+      imgH = pageH;
+      imgW = (canvas.width * imgH) / canvas.height;
+    }
+    const x = (pageW - imgW) / 2;
+    pdf.addImage(imgData, "JPEG", x, 0, imgW, imgH, undefined, "FAST");
+
+    const issuer = (settings.issuer.name || "issuer").replace(/[\\\/:*?"<>|]/g, "_");
+    const fileName = `請求書_${fmtDateCompact(f.date)}_${issuer}.pdf`;
+    pdf.save(fileName);
+
+    // 採番をインクリメント
+    bumpInvNo();
+    refreshPreview();
+  }catch(err){
+    console.error(err);
+    alert("PDFの生成に失敗しました。ページを再読み込みして再度お試しください。");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldLabel;
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+
+/* =========================================================================
+   設定モーダル
+   ========================================================================= */
+function openSettings(){
+  $("sCurrentNo").textContent = currentInvNoString();
+  $("sPrefix").value          = settings.invoiceNo.prefix ?? "";
+  $("sNextSeq").value         = settings.invoiceNo.nextSeq ?? 1;
+
+  $("sIssuerName").value      = settings.issuer.name || "";
+  $("sIssuerReg").value       = settings.issuer.registrationNo || "";
+  $("sIssuerContact").value   = settings.issuer.contact || "";
+  $("sIssuerAddress").value   = settings.issuer.address || "";
+
+  $("sRecipCompany").value    = settings.recipient.company || "";
+  $("sRecipPerson").value     = settings.recipient.person || "";
+
+  $("sBankName").value         = settings.bank.bankName || "";
+  $("sBankBranch").value       = settings.bank.branch || "";
+  $("sBankType").value         = settings.bank.accountType || "";
+  $("sBankNo").value           = settings.bank.accountNo || "";
+  $("sBankAccountName").value  = settings.bank.accountName || "";
+
+  const terms = settings.paymentTerms || { type: "endOfNextMonth", days: 30 };
+  $("sPayType").value = terms.type || "endOfNextMonth";
+  $("sPayDays").value = terms.days ?? 30;
+  updatePayDaysVisibility();
+
+  $("settingsMask").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function updatePayDaysVisibility(){
+  const wrap = $("sPayDaysWrap");
+  if(!wrap) return;
+  wrap.style.display = $("sPayType").value === "daysAfter" ? "" : "none";
+}
+function closeSettings(){
+  $("settingsMask").classList.remove("open");
+  document.body.style.overflow = "";
+}
+function saveFromModal(){
+  settings.invoiceNo.prefix  = $("sPrefix").value || "";
+  settings.invoiceNo.nextSeq = Math.max(1, parseInt($("sNextSeq").value || "1", 10) || 1);
+
+  settings.issuer.name           = $("sIssuerName").value.trim();
+  settings.issuer.registrationNo = $("sIssuerReg").value.trim();
+  settings.issuer.contact        = $("sIssuerContact").value.trim();
+  settings.issuer.address        = $("sIssuerAddress").value.trim();
+
+  settings.recipient.company = $("sRecipCompany").value.trim();
+  settings.recipient.person  = $("sRecipPerson").value.trim();
+
+  settings.bank.bankName     = $("sBankName").value.trim();
+  settings.bank.branch       = $("sBankBranch").value.trim();
+  settings.bank.accountType  = $("sBankType").value.trim();
+  settings.bank.accountNo    = $("sBankNo").value.trim();
+  settings.bank.accountName  = $("sBankAccountName").value.trim();
+
+  settings.paymentTerms = settings.paymentTerms || {};
+  settings.paymentTerms.type = $("sPayType").value || "endOfNextMonth";
+  settings.paymentTerms.days = Math.max(0, parseInt($("sPayDays").value || "30", 10) || 30);
+
+  saveSettings(settings);
+  refreshPreview();
+  closeSettings();
+}
+
+/* =========================================================================
+   初期化
+   ========================================================================= */
+function init(){
+  // 日付デフォルト = 本日
+  const today = new Date();
+  const iso = today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
+  $("fDate").value = iso;
+
+  // 明細を1行で初期化
+  addItem();
+  $("btnAddItem").addEventListener("click", () => { addItem(); });
+
+  $("fTravel").addEventListener("input", refreshPreview);
+
+  $("btnSettings").addEventListener("click", openSettings);
+  $("btnSettingsClose").addEventListener("click", closeSettings);
+  $("btnSettingsCancel").addEventListener("click", closeSettings);
+  $("btnSettingsSave").addEventListener("click", saveFromModal);
+  $("btnResetNo").addEventListener("click", () => {
+    if(confirm("請求書No.の連番を1にリセットしますか？")){
+      $("sNextSeq").value = 1;
+      $("sCurrentNo").textContent = ($("sPrefix").value || "") + String(1).padStart(settings.invoiceNo.padding||4, "0");
+    }
+  });
+  $("sPrefix").addEventListener("input", () => {
+    $("sCurrentNo").textContent = ($("sPrefix").value || "") + String(parseInt($("sNextSeq").value||"1",10)||1).padStart(settings.invoiceNo.padding||4, "0");
+  });
+  $("sNextSeq").addEventListener("input", () => {
+    $("sCurrentNo").textContent = ($("sPrefix").value || "") + String(parseInt($("sNextSeq").value||"1",10)||1).padStart(settings.invoiceNo.padding||4, "0");
+  });
+  $("sPayType").addEventListener("change", updatePayDaysVisibility);
+
+  $("btnDownload").addEventListener("click", generatePdf);
+
+  // 初回起動時、発行元名が未設定なら設定モーダルを開いて促す
+  refreshPreview();
+  if(!settings.issuer.name || settings.issuer.name === CONFIG.issuer.name){
+    setTimeout(openSettings, 300);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
