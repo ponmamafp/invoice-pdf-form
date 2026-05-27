@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F3864">
-<title>請求書PDF作成</title>
+<title>株式会社OASIS専用｜請求書発行ツール</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;-webkit-text-size-adjust:100%}
   body{padding-bottom:calc(96px + env(safe-area-inset-bottom));min-height:100dvh}
   header.app{position:sticky;top:0;background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:10;box-shadow:0 1px 0 rgba(0,0,0,.05)}
-  header.app h1{font-size:17px;font-weight:700;margin:0;letter-spacing:.02em}
+  header.app h1{font-size:14px;font-weight:700;margin:0;letter-spacing:.01em;line-height:1.3}
   header.app .actions{display:flex;gap:8px}
   header.app button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28);padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;min-height:36px;cursor:pointer;font-family:inherit}
   header.app button:active{background:rgba(255,255,255,.28)}
@@ -115,7 +115,10 @@
   .modal-head button{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.32);padding:8px 14px;border-radius:8px;font-size:13px;font-family:inherit;min-height:36px;cursor:pointer}
   .modal-body{padding:18px 16px;overflow-y:auto;flex:1}
   .modal-body .sec{margin-bottom:22px}
-  .modal-body .sec h3{font-size:13px;color:var(--navy);font-weight:700;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid #E5E7EB;letter-spacing:.04em}
+  .modal-body .sec h3{font-size:13px;color:var(--navy);font-weight:700;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid #E5E7EB;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+  .locked-badge{display:inline-block;font-size:10px;font-weight:500;color:var(--muted);background:#EEF1F5;padding:2px 8px;border-radius:10px;letter-spacing:0}
+  .field input[readonly],.field input:disabled,.field select:disabled{background:#F4F5F7;color:#555;cursor:not-allowed}
+  .field input[readonly]:focus{box-shadow:none;border-color:#D0D5DD}
   .modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid #E5E7EB;padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px}
   .modal-foot button{flex:1;font-size:15px;font-weight:700;font-family:inherit;padding:14px;border-radius:10px;border:none;cursor:pointer;min-height:48px}
   .modal-foot .save{background:var(--navy);color:#fff}
@@ -133,16 +136,18 @@
   .pdf-head .l{flex:1;padding:0;line-height:1.7;color:#111}
   .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-start;padding-left:100px}
   .pdf-head .recip-name{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
-  .pdf-head .recip-person{font-size:14px;color:#222}
+  .pdf-head .recip-postal{font-size:12px;color:#333;margin-top:2px}
+  .pdf-head .recip-address{font-size:12px;color:#333}
+  .pdf-head .recip-person{font-size:14px;color:#222;margin-top:6px}
   .pdf-head .recip-person.solo{font-size:17px;font-weight:700;color:#111}
   .pdf-head .meta{text-align:left}
   .pdf-head .meta .k{display:inline-block;width:80px;color:#666;text-align:left}
   .pdf-head .r .issuer-box{margin-top:14px;padding:0;background:transparent;font-size:11px;line-height:1.7;text-align:left;color:#333}
   .pdf-head .r .issuer-box .name{font-size:13px;font-weight:400;color:#111;margin-bottom:2px}
   .pdf-subject{margin:0 0 22px;font-size:14px;font-weight:700;border-left:4px solid var(--navy);padding:4px 0 4px 12px}
-  .pdf-amount-hero{background:var(--navy);color:#fff;padding:22px 26px;border-radius:8px;margin-bottom:26px;display:flex;justify-content:space-between;align-items:baseline}
-  .pdf-amount-hero .lbl{font-size:16px;letter-spacing:.1em;font-weight:500}
-  .pdf-amount-hero .val{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .pdf-amount-hero{background:var(--navy);color:#fff;padding:12px 22px;border-radius:6px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:baseline}
+  .pdf-amount-hero .lbl{font-size:14px;letter-spacing:.08em;font-weight:500}
+  .pdf-amount-hero .val{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
   .pdf-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12px}
   .pdf-table th{background:var(--navy);color:#fff;font-weight:500;padding:10px 12px;text-align:center;border:1px solid var(--navy)}
   .pdf-table td{padding:10px 12px;border:1px solid var(--line);background:#fff}
@@ -173,7 +178,7 @@
 <body>
 
 <header class="app">
-  <h1>請求書PDF作成</h1>
+  <h1>株式会社OASIS専用｜請求書発行ツール</h1>
   <div class="actions">
     <button type="button" id="btnSettings" aria-label="設定">設定</button>
   </div>
@@ -266,15 +271,17 @@
       </div>
 
       <div class="sec">
-        <h3>宛先（請求先）</h3>
-        <div class="field"><label for="sRecipCompany">会社名</label><input type="text" id="sRecipCompany" placeholder="株式会社○○○○"></div>
+        <h3>宛先（請求先）<span class="locked-badge">編集不可</span></h3>
+        <div class="field"><label for="sRecipCompany">会社名</label><input type="text" id="sRecipCompany" readonly></div>
+        <div class="field"><label for="sRecipPostal">郵便番号</label><input type="text" id="sRecipPostal" readonly></div>
+        <div class="field"><label for="sRecipAddress">住所</label><input type="text" id="sRecipAddress" readonly></div>
       </div>
 
       <div class="sec">
-        <h3>支払条件</h3>
+        <h3>支払条件<span class="locked-badge">編集不可</span></h3>
         <div class="field">
-          <label for="sPayType">支払期限の決め方</label>
-          <select id="sPayType">
+          <label for="sPayType">支払期限</label>
+          <select id="sPayType" disabled>
             <option value="endOfNextMonth">翌月末払い</option>
             <option value="endOfMonth">当月末払い</option>
             <option value="endOfMonthAfterNext">翌々月末払い</option>
@@ -283,7 +290,7 @@
         </div>
         <div class="field" id="sPayDaysWrap" style="display:none">
           <label for="sPayDays">日数（発行日からの日数）</label>
-          <input type="number" id="sPayDays" inputmode="numeric" min="0" step="1" placeholder="30">
+          <input type="number" id="sPayDays" inputmode="numeric" min="0" step="1" placeholder="30" disabled>
         </div>
       </div>
 
@@ -310,6 +317,8 @@
     <div class="pdf-head">
       <div class="l">
         <div class="recip-name" id="pdfRecipCompany">株式会社○○○○ 御中</div>
+        <div class="recip-postal" id="pdfRecipPostal">〒541-0052</div>
+        <div class="recip-address" id="pdfRecipAddress">大阪府大阪市中央区安土町1-6-22</div>
         <div class="recip-person" id="pdfRecipPerson">ご担当者 様</div>
       </div>
       <div class="r">
@@ -387,7 +396,9 @@ const CONFIG = {
   },
   recipient: {
     company: "株式会社OASIS",
-    person: ""
+    person: "",
+    postalCode: "541-0052",
+    address: "大阪府大阪市中央区安土町1-6-22"
   },
   bank: {
     bankName: "",
@@ -458,6 +469,15 @@ function deepMerge(base, over){
 }
 
 let settings = loadSettings();
+// ロック項目（宛先・支払条件）は常にCONFIGの値を強制
+settings.recipient.company    = CONFIG.recipient.company;
+settings.recipient.postalCode = CONFIG.recipient.postalCode;
+settings.recipient.address    = CONFIG.recipient.address;
+settings.recipient.person     = "";
+settings.paymentTerms = {
+  type: CONFIG.paymentTerms.type,
+  days: CONFIG.paymentTerms.days
+};
 
 /* =========================================================================
    計算ロジック（国税庁ルール準拠）
@@ -701,9 +721,15 @@ async function generatePdf(){
   // ステージへ反映（担当者名があれば会社の御中は付けない＝ビジネス慣習）
   const recipCompany = (settings.recipient.company || "").trim();
   const recipPerson  = (settings.recipient.person  || "").trim();
+  const recipPostal  = (settings.recipient.postalCode || "").trim();
+  const recipAddress = (settings.recipient.address || "").trim();
   const companySuffix = recipPerson ? "" : " 御中";
   $("pdfRecipCompany").textContent = recipCompany ? recipCompany + companySuffix : "";
   $("pdfRecipCompany").style.display = recipCompany ? "" : "none";
+  $("pdfRecipPostal").textContent  = recipPostal ? "〒" + recipPostal.replace(/^〒\s*/, "") : "";
+  $("pdfRecipPostal").style.display = recipPostal ? "" : "none";
+  $("pdfRecipAddress").textContent = recipAddress;
+  $("pdfRecipAddress").style.display = recipAddress ? "" : "none";
   $("pdfRecipPerson").textContent  = recipPerson ? recipPerson + " 様" : "";
   $("pdfRecipPerson").style.display = recipPerson ? "" : "none";
   // 会社名がなく担当者だけのときは大きめに表示
@@ -859,7 +885,10 @@ function openSettings(){
   $("sIssuerPostal").value    = settings.issuer.postalCode || "";
   $("sIssuerAddress").value   = settings.issuer.address || "";
 
-  $("sRecipCompany").value    = settings.recipient.company || "";
+  // 宛先はロック項目：常にCONFIGの値を表示（localStorageの古い値より優先）
+  $("sRecipCompany").value    = CONFIG.recipient.company;
+  $("sRecipPostal").value     = CONFIG.recipient.postalCode;
+  $("sRecipAddress").value    = CONFIG.recipient.address;
 
   $("sBankName").value         = settings.bank.bankName || "";
   $("sBankBranch").value       = settings.bank.branch || "";
@@ -897,8 +926,11 @@ function saveFromModal(){
   settings.issuer.postalCode     = $("sIssuerPostal").value.trim();
   settings.issuer.address        = $("sIssuerAddress").value.trim();
 
-  settings.recipient.company = $("sRecipCompany").value.trim();
-  settings.recipient.person  = "";
+  // 宛先はロック項目：常にCONFIGの値を保存（編集不可）
+  settings.recipient.company    = CONFIG.recipient.company;
+  settings.recipient.person     = "";
+  settings.recipient.postalCode = CONFIG.recipient.postalCode;
+  settings.recipient.address    = CONFIG.recipient.address;
 
   settings.bank.bankName     = $("sBankName").value.trim();
   settings.bank.branch       = $("sBankBranch").value.trim();
@@ -906,9 +938,11 @@ function saveFromModal(){
   settings.bank.accountNo    = $("sBankNo").value.trim();
   settings.bank.accountName  = $("sBankAccountName").value.trim();
 
-  settings.paymentTerms = settings.paymentTerms || {};
-  settings.paymentTerms.type = $("sPayType").value || "endOfNextMonth";
-  settings.paymentTerms.days = Math.max(0, parseInt($("sPayDays").value || "30", 10) || 30);
+  // 支払条件はロック項目：常にCONFIGの値（翌月末払い）を保存
+  settings.paymentTerms = {
+    type: CONFIG.paymentTerms.type,
+    days: CONFIG.paymentTerms.days
+  };
 
   settings.notes = $("sNotes").value;
 
