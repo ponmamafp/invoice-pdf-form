@@ -761,9 +761,9 @@ async function generatePdf(){
   tbody.innerHTML = rows.map(row => `
     <tr>
       <td class="c">${escapeHtml(row.shootDate)}</td>
-      <td>${escapeHtml(row.location)}</td>
-      <td>${escapeHtml(row.customerName)}</td>
-      <td>${escapeHtml(row.content).replace(/\n/g,"<br>")}</td>
+      <td class="c">${escapeHtml(row.location)}</td>
+      <td class="c">${escapeHtml(row.customerName)}</td>
+      <td class="c">${escapeHtml(row.content).replace(/\n/g,"<br>")}</td>
       <td class="r">${yen(row.amount)}</td>
     </tr>
   `).join("");
