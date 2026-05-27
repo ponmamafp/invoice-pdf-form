@@ -125,7 +125,7 @@
   .pdf-page .title{font-size:32px;font-weight:700;color:var(--navy);text-align:center;letter-spacing:.6em;padding-left:.6em;border-bottom:3px double var(--navy);padding-bottom:8px;margin-bottom:30px}
   .pdf-head{display:flex;justify-content:space-between;gap:24px;margin-bottom:28px;align-items:flex-start}
   .pdf-head .l{flex:1;padding:0;line-height:1.7;color:#111}
-  .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-start}
+  .pdf-head .r{flex:1;font-size:11px;color:#333;display:flex;flex-direction:column;align-items:flex-start;padding-left:60px}
   .pdf-head .recip-name{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
   .pdf-head .recip-person{font-size:14px;color:#222}
   .pdf-head .recip-person.solo{font-size:17px;font-weight:700;color:#111}
@@ -240,25 +240,25 @@
       <div class="sec">
         <h3>発行元情報（あなたの情報）</h3>
         <div class="field"><label for="sIssuerName">氏名／会社名</label><input type="text" id="sIssuerName" placeholder="山田 太郎"></div>
-        <div class="field"><label for="sIssuerReg">インボイス登録番号</label><input type="text" id="sIssuerReg" placeholder="T1234567890123"></div>
-        <div class="field"><label for="sIssuerContact">連絡先（メール／電話）</label><input type="text" id="sIssuerContact" placeholder="mail@example.com"></div>
         <div class="field"><label for="sIssuerPostal">郵便番号（任意）</label><input type="text" id="sIssuerPostal" inputmode="numeric" placeholder="123-4567"></div>
         <div class="field"><label for="sIssuerAddress">住所（任意）</label><input type="text" id="sIssuerAddress" placeholder="東京都〇〇区..."></div>
+        <div class="field"><label for="sIssuerContact">連絡先（メール／電話）</label><input type="text" id="sIssuerContact" placeholder="mail@example.com"></div>
+        <div class="field"><label for="sIssuerReg">インボイス登録番号</label><input type="text" id="sIssuerReg" placeholder="T1234567890123"></div>
+      </div>
+
+      <div class="sec">
+        <h3>振込先（あなたの口座）</h3>
+        <div class="field"><label for="sBankName">銀行名</label><input type="text" id="sBankName" placeholder="○○銀行"></div>
+        <div class="field"><label for="sBankBranch">支店名</label><input type="text" id="sBankBranch" placeholder="○○支店"></div>
+        <div class="field"><label for="sBankType">口座種別</label><input type="text" id="sBankType" placeholder="普通"></div>
+        <div class="field"><label for="sBankNo">口座番号</label><input type="text" id="sBankNo" inputmode="numeric" placeholder="1234567"></div>
+        <div class="field"><label for="sBankAccountName">口座名義（カナ）</label><input type="text" id="sBankAccountName" placeholder="ヤマダ タロウ"></div>
       </div>
 
       <div class="sec">
         <h3>宛先（請求先）</h3>
         <div class="field"><label for="sRecipCompany">会社名</label><input type="text" id="sRecipCompany" placeholder="株式会社○○○○"></div>
         <div class="field"><label for="sRecipPerson">担当者名</label><input type="text" id="sRecipPerson" placeholder="ご担当者"></div>
-      </div>
-
-      <div class="sec">
-        <h3>振込先</h3>
-        <div class="field"><label for="sBankName">銀行名</label><input type="text" id="sBankName" placeholder="○○銀行"></div>
-        <div class="field"><label for="sBankBranch">支店名</label><input type="text" id="sBankBranch" placeholder="○○支店"></div>
-        <div class="field"><label for="sBankType">口座種別</label><input type="text" id="sBankType" placeholder="普通"></div>
-        <div class="field"><label for="sBankNo">口座番号</label><input type="text" id="sBankNo" inputmode="numeric" placeholder="1234567"></div>
-        <div class="field"><label for="sBankAccountName">口座名義（カナ）</label><input type="text" id="sBankAccountName" placeholder="ヤマダ タロウ"></div>
       </div>
 
       <div class="sec">
@@ -376,7 +376,7 @@ const CONFIG = {
     address: ""
   },
   recipient: {
-    company: "",
+    company: "株式会社OASIS",
     person: ""
   },
   bank: {
@@ -658,10 +658,11 @@ async function generatePdf(){
   const r = calc(itemsTotal, f.travel);
   const invNo = currentInvNoString();
 
-  // ステージへ反映（御中・様は名前があるときだけ付ける）
+  // ステージへ反映（担当者名があれば会社の御中は付けない＝ビジネス慣習）
   const recipCompany = (settings.recipient.company || "").trim();
   const recipPerson  = (settings.recipient.person  || "").trim();
-  $("pdfRecipCompany").textContent = recipCompany ? recipCompany + " 御中" : "";
+  const companySuffix = recipPerson ? "" : " 御中";
+  $("pdfRecipCompany").textContent = recipCompany ? recipCompany + companySuffix : "";
   $("pdfRecipCompany").style.display = recipCompany ? "" : "none";
   $("pdfRecipPerson").textContent  = recipPerson ? recipPerson + " 様" : "";
   $("pdfRecipPerson").style.display = recipPerson ? "" : "none";
@@ -776,9 +777,9 @@ async function generatePdf(){
 
     pdf.save(fileName);
 
-    // 採番をインクリメント＆次回のために明細を保存
+    // 採番をインクリメント＆次回のために明細を保存（内容のみ・金額は毎回入力し直す）
     bumpInvNo();
-    saveLastItems(validItems);
+    saveLastItems(validItems.map(it => ({ content: it.content, amount: "" })));
     refreshPreview();
   }catch(err){
     console.error(err);
